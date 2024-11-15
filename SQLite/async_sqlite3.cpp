@@ -15,8 +15,8 @@ static WorkerThread SQLiteThread("SQLite Thread");
 /// @param[in] func - a class instance function to invoke
 /// @param[in] timeout - the time to wait for invoke to complete
 /// @param[in] args - the function argument(s) passed to func
-template <typename F, typename Timeout, typename... Args>
-auto AsyncInvoke(F func, Timeout timeout, Args&&... args)
+template <typename Func, typename Timeout, typename... Args>
+auto AsyncInvoke(Func func, Timeout timeout, Args&&... args)
 {
     // Deduce return type of func
     using RetType = decltype(func(std::forward<Args>(args)...));  

@@ -60,14 +60,14 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 
 // Simple example to create and write to the database asynchronously. 
 // Use async::sqlite3_<func> series of functions within the async namespace.
-int async_simple_example()
+int async_sqlite_simple_example()
 {
     sqlite3* db;
     char* errMsg = 0;
     int rc;
 
     // Step 1: Open (or create) the SQLite database file
-    rc = async::sqlite3_open("async_simple_example.db", &db);
+    rc = async::sqlite3_open("async_sqlite_simple_example.db", &db);
 
     if (rc) 
     {
@@ -133,13 +133,13 @@ int async_simple_example()
 
 // Async SQLite multithread example. The WriteDatabaseLambda() function is called 
 // from multiple threads of control. Function returns after all threads are complete.
-int async_mutithread_example()
+int async_sqlite_multithread_example()
 {
     char* errMsg = 0;
     int rc;
 
     // Step 1: Open (or create) the SQLite database file
-    rc = async::sqlite3_open("async_mutithread_example.db", &db_multithread);
+    rc = async::sqlite3_open("async_sqlite_multithread_example.db", &db_multithread);
 
     if (rc)
     {
@@ -256,16 +256,16 @@ int main(void)
     async::sqlite3_init_async();
 
     // Run simple example. Each database call is invoked on the SQLite internal thread.
-    async_simple_example();
+    async_sqlite_simple_example();
 
     // Run simple example entirely on the internal async SQLite thread. This shows how 
     // to execute multiple SQL commands uninterrupted.
     DelegateLib::DelegateThread* sqlThread = async::sqlite3_get_thread();
-    auto delegate = DelegateLib::MakeDelegate(&async_simple_example, *sqlThread, std::chrono::milliseconds::max());
+    auto delegate = DelegateLib::MakeDelegate(&async_sqlite_simple_example, *sqlThread, std::chrono::milliseconds::max());
     delegate.AsyncInvoke();
 
     // Run multithreaded example
-    async_mutithread_example();
+    async_sqlite_multithread_example();
 
     // Exit all worker threads
     for (int i = 0; i < WORKER_THREAD_CNT; i++)
