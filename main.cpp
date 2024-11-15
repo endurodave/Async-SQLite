@@ -1,5 +1,7 @@
 // @see https://github.com/endurodave/Async-SQLite
 // David Lafreniere, Nov 2024.
+//
+// Asynchronous SQLite wrapper using a C++ delegate library. 
 
 // TODO:
 // Update this file header
@@ -253,8 +255,14 @@ int main(void)
     // Initialize async sqlite3 interface
     async::sqlite3_init_async();
 
-    // Run simple example 
+    // Run simple example. Each database call is invoked on the SQLite internal thread.
     async_simple_example();
+
+    // Run simple example entirely on the internal async SQLite thread. This shows how 
+    // to execute multiple SQL commands uninterrupted.
+    DelegateLib::DelegateThread* sqlThread = async::sqlite3_get_thread();
+    auto delegate = DelegateLib::MakeDelegate(&async_simple_example, *sqlThread, std::chrono::milliseconds::max());
+    delegate.AsyncInvoke();
 
     // Run multithreaded example
     async_mutithread_example();
