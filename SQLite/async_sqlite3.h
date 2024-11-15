@@ -3,6 +3,7 @@
 
 #include "sqlite3.h"
 #include <chrono>
+#include "DelegateThread.h"
 
 // Asynchronous SQLite API that to invoke from a single thread of control.
 // All API functions are thread-safe and can be called from any thread of control.
@@ -12,6 +13,8 @@ namespace async
 {
     // Call one-time at application startup
     void sqlite3_init_async(void);
+
+    DelegateLib::DelegateThread* sqlite3_get_thread(void);
 
     SQLITE_API int sqlite3_open(
         const char* filename,   /* Database filename (UTF-8) */

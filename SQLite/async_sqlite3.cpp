@@ -18,7 +18,8 @@ static WorkerThread SQLiteThread("SQLite Thread");
 template <typename F, typename Timeout, typename... Args>
 auto AsyncInvoke(F func, Timeout timeout, Args&&... args)
 {
-    using RetType = decltype(func(std::forward<Args>(args)...));  // Deduce return type of func
+    // Deduce return type of func
+    using RetType = decltype(func(std::forward<Args>(args)...));  
 
     // Is the calling function executing on the SQLiteThread thread?
     if (SQLiteThread.GetThreadId() != WorkerThread::GetCurrentThreadId())
@@ -66,6 +67,11 @@ void async::sqlite3_init_async(void)
 {
     // Create the worker thread
     SQLiteThread.CreateThread();
+}
+
+DelegateLib::DelegateThread* async::sqlite3_get_thread(void)
+{
+    return &SQLiteThread;
 }
 
 SQLITE_API int async::sqlite3_open(
