@@ -1,6 +1,10 @@
 // @see https://github.com/endurodave/Async-SQLite
 // David Lafreniere, Nov 2024.
 
+// TODO:
+// Update this file header
+// Update modern delegate article, async wait still invokes even if timeout expires
+
 #include "DelegateLib.h"
 #include "WorkerThreadStd.h"
 #include <stdio.h>
@@ -23,6 +27,22 @@ static const int WORKER_THREAD_CNT = sizeof(workerThreads) / sizeof(workerThread
 static std::mutex mtx;                  // Mutex to synchronize access to the condition variable
 static std::condition_variable cv;      // Condition variable to block and notify threads
 static bool ready = false;              // Shared state to check if the thread should proceed
+static std::mutex printMutex;
+static sqlite3* db_multithread = nullptr;     
+
+// Thread safe printf function that locks the mutex
+void printf_safe(const char* format, ...) 
+{
+    std::lock_guard<std::mutex> lock(printMutex);  // Lock the mutex
+
+    // Start variadic arguments processing
+    va_list args;
+    va_start(args, format);
+
+    vprintf(format, args);  // Call vprintf to handle the format string and arguments
+
+    va_end(args);  // Clean up the variadic arguments
+}
 
 // Callback function to display query results (optional).
 // When using async SQLite interface, callback is called on the async SQLite 
@@ -31,13 +51,13 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 {
     for (int i = 0; i < argc; i++) 
     {
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+        printf_safe("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
     }
     return 0;
 }
 
 // Simple example to create and write to the database asynchronously. 
-// Use async::sqlite3_<func> series of functions. 
+// Use async::sqlite3_<func> series of functions within the async namespace.
 int async_simple_example()
 {
     sqlite3* db;
@@ -54,7 +74,7 @@ int async_simple_example()
     }
     else 
     {
-        printf("Opened database successfully\n");
+        printf_safe("Opened database successfully\n");
     }
 
     // Step 2: Create a table if it does not exist
@@ -72,7 +92,7 @@ int async_simple_example()
     }
     else 
     {
-        printf("Table created successfully or already exists\n");
+        printf_safe("Table created successfully or already exists\n");
     }
 
     // Step 3: Insert a record
@@ -87,7 +107,7 @@ int async_simple_example()
     }
     else 
     {
-        printf("Record inserted successfully\n");
+        printf_safe("Record inserted successfully\n");
     }
 
     // Step 4: Verify the insertion by querying the table
@@ -101,15 +121,13 @@ int async_simple_example()
     }
     else 
     {
-        printf("Query executed successfully\n");
+        printf_safe("Query executed successfully\n");
     }
 
     // Step 5: Close the database connection
     async::sqlite3_close(db);
     return 0;
 }
-
-static sqlite3* db_local = nullptr;
 
 // Async SQLite multithread example. The WriteDatabaseLambda() function is called 
 // from multiple threads of control. Function returns after all threads are complete.
@@ -119,16 +137,16 @@ int async_mutithread_example()
     int rc;
 
     // Step 1: Open (or create) the SQLite database file
-    rc = async::sqlite3_open("async_mutithread_example.db", &db_local);
+    rc = async::sqlite3_open("async_mutithread_example.db", &db_multithread);
 
     if (rc)
     {
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db_local));
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db_multithread));
         return(0);
     }
     else
     {
-        printf("Opened database successfully\n");
+        printf_safe("Opened database successfully\n");
     }
 
     // Step 2: Create a table if it does not exist
@@ -137,7 +155,7 @@ int async_mutithread_example()
         "thread_name TEXT NOT NULL, "
         "cnt TEXT NOT NULL);";
 
-    rc = async::sqlite3_exec(db_local, createTableSQL, callback, 0, &errMsg);
+    rc = async::sqlite3_exec(db_multithread, createTableSQL, callback, 0, &errMsg);
     if (rc != SQLITE_OK)
     {
         fprintf(stderr, "SQL error: %s\n", errMsg);
@@ -146,7 +164,7 @@ int async_mutithread_example()
     }
     else
     {
-        printf("Table created successfully or already exists\n");
+        printf_safe("Table created successfully or already exists\n");
     }
 
     // Lambda function to write data to SQLite database
@@ -162,7 +180,7 @@ int async_mutithread_example()
             std::string insertSQL = "INSERT INTO threads (thread_name, cnt) "
                 "VALUES ('" + thread_name + "', '" + std::to_string(i) + "');";
 
-            rc = async::sqlite3_exec(db_local, insertSQL.c_str(), callback, 0, &errMsg);
+            rc = async::sqlite3_exec(db_multithread, insertSQL.c_str(), callback, 0, &errMsg);
             if (rc != SQLITE_OK)
             {
                 fprintf(stderr, "SQL error: %s\n", errMsg);
@@ -170,14 +188,14 @@ int async_mutithread_example()
             }
             else
             {
-                printf("Record inserted successfully\n");
+                printf_safe("Record inserted successfully\n");
             }
 
 #if 0
             // Step 4: Verify the insertion by querying the table
             const char* selectSQL = "SELECT * FROM threads;";
 
-            rc = async::sqlite3_exec(db_local, selectSQL, callback, 0, &errMsg);
+            rc = async::sqlite3_exec(db_multithread, selectSQL, callback, 0, &errMsg);
             if (rc != SQLITE_OK)
             {
                 fprintf(stderr, "SQL error: %s\n", errMsg);
@@ -185,7 +203,7 @@ int async_mutithread_example()
             }
             else
             {
-                printf("Query executed successfully\n");
+                printf_safe("Query executed successfully\n");
             }
 #endif
         }
@@ -219,7 +237,7 @@ int async_mutithread_example()
         cv.wait(lock);  // Block the thread until notified
 
     // Step 5: Close the database connection
-    async::sqlite3_close(db_local);
+    async::sqlite3_close(db_multithread);
     return 0;
 }
 
@@ -235,7 +253,7 @@ int main(void)
     // Initialize async sqlite3 interface
     async::sqlite3_init_async();
 
-    // Run simple example
+    // Run simple example 
     async_simple_example();
 
     // Run multithreaded example
