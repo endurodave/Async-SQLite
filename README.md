@@ -28,7 +28,7 @@ The purpose of the wrapper is twofold: First, to provide a simple asynchronous l
 # References
 
 * <a href="https://github.com/endurodave/AsyncMulticastDelegateModern">Asynchronous Multicast Delegates in Modern C++</a> - A C++ standards compliant delegate library capable of targeting any callable function synchronously or asynchronously.
-*  <a href="https://github.com/endurodave/StdWorkerThread">Asynchronous Multicast Delegates in Modern C++</a> - A C++ standards compliant delegate library capable of targeting any callable function synchronously or asynchronously.
+*  <a href="https://github.com/endurodave/StdWorkerThread">C++ std::thread Event Loop with Message Queue and Timer</a> - Create a worker thread with an event loop, message queue and a timer using the C++11 thread support library.
 * <a href="https://www.sqlite.org/">SQLite</a> - SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
 
 # Project Build
@@ -49,7 +49,7 @@ After executed, build the software from within the Async-SQLiteBuild directory u
 
 # Delegate Quick Start
 
-The DelegateLib contains delegates and delegate containers. The example below shows creating a delegate with the target function `MyTestFunc()`. The first example shows how to synchronously call a function, and the second example asynchronously. Notice the only difference is adding a thread instance `myThread` argument. See [Delegate Library](https://github.com/endurodave/AsyncMulticastDelegateModern) repository for more details.
+The DelegateLib contains delegates and delegate containers. The example below creates a delegate with the target function `MyTestFunc()`. The first example is a synchronously delegate function call, and the second example asynchronously. Notice the only difference is adding a thread instance `myThread` argument. See [Delegate Library](https://github.com/endurodave/AsyncMulticastDelegateModern) repository for more details.
 
 ```cpp
 #include "DelegateLib.h"
@@ -83,11 +83,11 @@ int main(void)
 * **Non-blocking Operations:** By executing database queries in a separate thread, the main application thread can continue processing other tasks without waiting for SQLite operations to complete.
 * **Isolation:** Running SQLite on a private thread ensures that database-related tasks are isolated from the main application logic, reducing the risk of thread contention or deadlock in the main application.
 
-A side benefit is a real-world example a cross-threaded application using the delegate library. 
+A side benefit is a real-world example of a cross-threaded application using the delegate library. 
 
 # Asynchronous SQLite
 
-The file `async_sqlite3.h` implement the asynchronous interface. Each async function matches the SQLite library with the addition of a `timeout` argument.
+The file `async_sqlite3.h` implement the asynchronous interface. Each async function matches the SQLite library except the addition of a `timeout` argument.
 
 ```cpp
 namespace async
@@ -175,7 +175,7 @@ SQLITE_API int async::sqlite3_close(
 // TODO: Add more sqlite async API's as necessary
 ```
 
-The `AsyncInvoke()` helper function invokes the function asynchronously if the caller is not executing on the `SQLiteThread` thread. Otherwise, if the caller is already on the internal thread and the target function is called synchronously. 
+The `AsyncInvoke()` helper function invokes the function asynchronously if the caller is not executing on the `SQLiteThread` thread. Otherwise, if the caller is already on the internal thread the target function is called synchronously.
 
 ```cpp
 // A private worker thread instance to execute all SQLite API functions
@@ -365,7 +365,7 @@ A delegate callback within `async_sqlite_simple_example()` could be used to noti
 
 ## Multithread Example
 
-The `async_mutithread_example()` uses two separate threads to insert to the database concurrently. The lambda function `WriteDatabaseLambda` is invoked by two threads. When both worker threads are complete, the `async_multithread_example()` function returns.
+The `async_mutithread_example()` uses two separate threads to insert into the database concurrently. The lambda function `WriteDatabaseLambda` is invoked by two threads. When both worker threads are complete, the `async_multithread_example()` function returns.
 
 ```cpp
 // Async SQLite multithread example. The WriteDatabaseLambda() function is called 
