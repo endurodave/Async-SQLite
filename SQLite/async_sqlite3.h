@@ -11,15 +11,19 @@
 
 namespace async
 {
+    #undef max  // Prevent compiler error on next line if max is defined
+    constexpr auto MAX_WAIT = std::chrono::milliseconds::max();
+
     // Call one-time at application startup
     void sqlite3_init_async(void);
 
+    // Get a pointer to the internal thread
     DelegateLib::DelegateThread* sqlite3_get_thread(void);
 
     SQLITE_API int sqlite3_open(
         const char* filename,   /* Database filename (UTF-8) */
         sqlite3** ppDb,         /* OUT: SQLite db handle */
-        std::chrono::milliseconds timeout = std::chrono::milliseconds::max()
+        std::chrono::milliseconds timeout = MAX_WAIT
     );
 
     SQLITE_API int sqlite3_exec(
@@ -28,12 +32,12 @@ namespace async
         sqlite3_callback xCallback, /* Invoke this callback routine */
         void* pArg,                 /* First argument to xCallback() */
         char** pzErrMsg,            /* Write error messages here */
-        std::chrono::milliseconds timeout = std::chrono::milliseconds::max()
+        std::chrono::milliseconds timeout = MAX_WAIT
     );
 
     SQLITE_API int sqlite3_close(
         sqlite3* db,
-        std::chrono::milliseconds timeout = std::chrono::milliseconds::max()
+        std::chrono::milliseconds timeout = MAX_WAIT
     );
 
     // TODO: Add more sqlite async API's as necessary

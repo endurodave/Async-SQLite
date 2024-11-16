@@ -133,13 +133,13 @@ int async_sqlite_simple_example()
 
 // Async SQLite multithread example. The WriteDatabaseLambda() function is called 
 // from multiple threads of control. Function returns after all threads are complete.
-int async_sqlite_multithread_example()
+int async_mutithread_example()
 {
     char* errMsg = 0;
     int rc;
 
     // Step 1: Open (or create) the SQLite database file
-    rc = async::sqlite3_open("async_sqlite_multithread_example.db", &db_multithread);
+    rc = async::sqlite3_open("async_mutithread_example.db", &db_multithread);
 
     if (rc)
     {
@@ -192,22 +192,20 @@ int async_sqlite_multithread_example()
             {
                 printf_safe("Record inserted successfully\n");
             }
+        }
 
-#if 0
-            // Step 4: Verify the insertion by querying the table
-            const char* selectSQL = "SELECT * FROM threads;";
+        // Step 4: Verify the insertion by querying the table
+        const char* selectSQL = "SELECT * FROM threads;";
 
-            rc = async::sqlite3_exec(db_multithread, selectSQL, callback, 0, &errMsg);
-            if (rc != SQLITE_OK)
-            {
-                fprintf(stderr, "SQL error: %s\n", errMsg);
-                sqlite3_free(errMsg);
-            }
-            else
-            {
-                printf_safe("Query executed successfully\n");
-            }
-#endif
+        rc = async::sqlite3_exec(db_multithread, selectSQL, callback, 0, &errMsg);
+        if (rc != SQLITE_OK)
+        {
+            fprintf(stderr, "SQL error: %s\n", errMsg);
+            sqlite3_free(errMsg);
+        }
+        else
+        {
+            printf_safe("Query executed successfully\n");
         }
 
         // Last thread complete?
@@ -261,11 +259,13 @@ int main(void)
     // Run simple example entirely on the internal async SQLite thread. This shows how 
     // to execute multiple SQL commands uninterrupted.
     DelegateLib::DelegateThread* sqlThread = async::sqlite3_get_thread();
-    auto delegate = DelegateLib::MakeDelegate(&async_sqlite_simple_example, *sqlThread, std::chrono::milliseconds::max());
-    delegate.AsyncInvoke();
+    auto delegate = DelegateLib::MakeDelegate(&async_sqlite_simple_example, *sqlThread, async::MAX_WAIT);
+    auto retVal = delegate.AsyncInvoke();
+    if (retVal.has_value())
+        printf_safe("Return Value: %d\n", retVal.value());
 
     // Run multithreaded example
-    async_sqlite_multithread_example();
+    async_mutithread_example();
 
     // Exit all worker threads
     for (int i = 0; i < WORKER_THREAD_CNT; i++)

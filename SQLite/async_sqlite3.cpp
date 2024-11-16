@@ -12,7 +12,7 @@ using namespace DelegateLib;
 static WorkerThread SQLiteThread("SQLite Thread");
 
 /// Helper function to simplify asynchronous function calling on SQLiteThread
-/// @param[in] func - a class instance function to invoke
+/// @param[in] func - a function to invoke
 /// @param[in] timeout - the time to wait for invoke to complete
 /// @param[in] args - the function argument(s) passed to func
 template <typename Func, typename Timeout, typename... Args>
@@ -27,7 +27,7 @@ auto AsyncInvoke(Func func, Timeout timeout, Args&&... args)
         // Create a delegate that points to func and is invoked on SQLiteThread
         auto delegate = DelegateLib::MakeDelegate(func, SQLiteThread, timeout);
 
-        // Invoke the delegate target function and wait for function call to complete
+        // Invoke the delegate target function asynchronously and wait for function call to complete
         auto retVal = delegate.AsyncInvoke(std::forward<Args>(args)...);
 
         // Did the async function call succeed?
@@ -58,7 +58,7 @@ auto AsyncInvoke(Func func, Timeout timeout, Args&&... args)
     }
     else
     {
-        // Invoke the target function directly since already executing on SQLiteThread
+        // Invoke the target function synchronously since already executing on SQLiteThread
         return func(std::forward<Args>(args)...);
     }
 }
