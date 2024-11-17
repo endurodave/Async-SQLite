@@ -24,13 +24,17 @@ WorkerThread workerThreads[] = {
     { "WorkerThread2" } 
 };
 
+WorkerThread nonBlockingAsyncThread("NonBlockingAsyncThread");
+
 static const int WORKER_THREAD_CNT = sizeof(workerThreads) / sizeof(workerThreads[0]);
 
 static std::mutex mtx;                  // Mutex to synchronize access to the condition variable
 static std::condition_variable cv;      // Condition variable to block and notify threads
 static bool ready = false;              // Shared state to check if the thread should proceed
 static std::mutex printMutex;
-static sqlite3* db_multithread = nullptr;     
+static sqlite3* db_multithread = nullptr;
+static MulticastDelegateSafe<void(int)> completeCallback;
+static std::atomic<bool> completeFlag = false;
 
 // Thread safe printf function that locks the mutex
 void printf_safe(const char* format, ...) 
@@ -216,9 +220,10 @@ int async_mutithread_example()
 
             cv.notify_all();  // Notify waiting threads time to exit
         }
-    };
+    };  // End Lambda
 
     // Invoke WriteDatabaseLambda lambda function on worker thread
+    ready = false;
     for (int i = 0; i < WORKER_THREAD_CNT; i++)
     {
         // Create an async delegate to invoke WriteDatabaseLambda()
@@ -238,7 +243,81 @@ int async_mutithread_example()
 
     // Step 5: Close the database connection
     async::sqlite3_close(db_multithread);
+
+    // Invoke delegate callback indicating function is compelete
+    completeCallback(0);
     return 0;
+}
+
+// Run simple async example
+void example1()
+{
+    async_sqlite_simple_example();
+}
+// Run simple async example entirely on the internal async SQLite thread. This shows how 
+// to execute multiple SQL commands uninterrupted.
+void example2()
+{
+    // Get the internal SQLite async interface thread
+    DelegateLib::DelegateThread* sqlThread = async::sqlite3_get_thread();
+
+    // Create an asynchronous blocking delegate to invoke async_sqlite_simple_example()
+    auto delegate = DelegateLib::MakeDelegate(&async_sqlite_simple_example, *sqlThread, async::MAX_WAIT);
+
+    // Invoke async_sqlite_simple_example() on sqlThread and wait for the retVal
+    auto retVal = delegate.AsyncInvoke();
+
+    // If retVal has a value then the asynchronous function call succeeded
+    if (retVal.has_value())
+    {
+        // The async_sqlite_simple_example() return value is stored in retVal.value()
+        printf_safe("Return Value: %d\n", retVal.value());
+    }
+}
+
+// Run multithreaded example (blocking) and return the execution time
+std::chrono::microseconds example3()
+{
+    auto blockingStart = std::chrono::high_resolution_clock::now();
+
+    // Call example and wait for completion
+    int retVal = async_mutithread_example();
+
+    auto blockingEnd = std::chrono::high_resolution_clock::now();
+    auto blockingDuration = std::chrono::duration_cast<std::chrono::microseconds>(blockingEnd - blockingStart);
+
+    return blockingDuration;
+}
+
+// Run the multithreaded example (non-blocking) on nonBlockingAsyncThread thread and 
+// return the execution time.
+std::chrono::microseconds example4()
+{
+    completeFlag = false;
+
+    // Lambda function to receive the complete callback
+    auto CompleteCallbackLambda = +[](int retVal) -> void
+    {
+        completeFlag = true;
+    };
+
+    // Register with delegate to receive callback
+    completeCallback += MakeDelegate(CompleteCallbackLambda);
+
+    auto nonBlockingStart = std::chrono::high_resolution_clock::now();
+
+    // Create a delegate to execute on nonBlockingAsyncThread without waiting for completion (NO_WAIT)
+    auto noWaitDelegate = DelegateLib::MakeDelegate(&async_mutithread_example, nonBlockingAsyncThread, async::NO_WAIT);
+
+    // Call async_mutithread_example() on nonBlockingAsyncThread and don't wait for it to complete
+    auto retVal = noWaitDelegate.AsyncInvoke();
+    if (retVal.has_value())   // have_value() will be false; not waiting for return value
+        printf_safe("Return Value: %d\n", retVal.value());
+
+    auto nonBlockingEnd = std::chrono::high_resolution_clock::now();
+    auto nonBlockingDuration = std::chrono::duration_cast<std::chrono::microseconds>(nonBlockingEnd - nonBlockingStart);
+
+    return nonBlockingDuration;
 }
 
 //------------------------------------------------------------------------------
@@ -246,30 +325,37 @@ int async_mutithread_example()
 //------------------------------------------------------------------------------
 int main(void)
 {
+    std::remove("async_mutithread_example.db");
+    std::remove("async_sqlite_simple_example.db");
+
     // Create all worker threads
+    nonBlockingAsyncThread.CreateThread();
     for (int i=0; i<WORKER_THREAD_CNT; i++)
         workerThreads[i].CreateThread();
 
     // Initialize async sqlite3 interface
     async::sqlite3_init_async();
 
-    // Run simple example. Each database call is invoked on the SQLite internal thread.
-    async_sqlite_simple_example();
+    // Run all examples
+    example1();
+    example2();
+    auto blockingDuration = example3();
+    auto nonBlockingDuration = example4();
 
-    // Run simple example entirely on the internal async SQLite thread. This shows how 
-    // to execute multiple SQL commands uninterrupted.
-    DelegateLib::DelegateThread* sqlThread = async::sqlite3_get_thread();
-    auto delegate = DelegateLib::MakeDelegate(&async_sqlite_simple_example, *sqlThread, async::MAX_WAIT);
-    auto retVal = delegate.AsyncInvoke();
-    if (retVal.has_value())
-        printf_safe("Return Value: %d\n", retVal.value());
-
-    // Run multithreaded example
-    async_mutithread_example();
+    // Wait for example4() to complete on nonBlockingAsyncThread
+    while (!completeFlag)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 
     // Exit all worker threads
+    nonBlockingAsyncThread.ExitThread();
     for (int i = 0; i < WORKER_THREAD_CNT; i++)
         workerThreads[i].ExitThread();
+
+    // Compare blocking and non-blocking execution times
+    std::cout << "Blocking Time: " << blockingDuration.count() << " microseconds." << std::endl;
+    std::cout << "Non-Blocking Time: " << nonBlockingDuration.count() << " microseconds." << std::endl;
 
 	return 0;
 }

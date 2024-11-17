@@ -18,6 +18,9 @@ An asynchronous SQLite API wrapper implemented using a C++ delegate libraries. A
   - [Simple Example](#simple-example)
   - [Simple Example Block Execute](#simple-example-block-execute)
   - [Multithread Example](#multithread-example)
+    - [Synchronous Blocking Execution](#synchronous-blocking-execution)
+    - [Asynchronous Non-Blocking Execution](#asynchronous-non-blocking-execution)
+    - [Test Results](#test-results)
 
 # Overview
 
@@ -69,18 +72,25 @@ int main(void)
     // Invoke MyTestFunc() synchronously
     syncDelegate(123);
 
-    // Create an asynchronous delegate
+    // Create an asynchronous non-blocking delegate
     auto asyncDelegate = MakeDelegate(&MyTestFunc, myThread);
 
-    // Invoke MyTestFunc() asynchronously
+    // Invoke MyTestFunc() asynchronously (non-blocking)
     asyncDelegate(123);
+
+    // Create an asynchronous blocking delegate
+    auto asyncDelegateWait = MakeDelegate(&MyTestFunc, myThread, WAIT_INFINITE);
+
+    // Invoke MyTestFunc() asynchronously (blocking)
+    asyncDelegateWait(123);
 }
 ```
 
 # Why Asynchronous SQLite
 
 * **Improved Performance:** Offloading SQLite operations to a separate thread allows the main thread to remain responsive, enhancing overall application performance.
-* **Non-blocking Operations:** By executing database queries in a separate thread, the main application thread can continue processing other tasks without waiting for SQLite operations to complete.
+* **Non-blocking Operations:** By executing database queries in a separate thread, the main application thread can continue processing other tasks without waiting for SQLite operations to complete. A callback can be used to signal completion.
+* **Atomic Operations:** Execute a series of database operations that cannot be interrupted without locks.
 * **Isolation:** Running SQLite on a private thread ensures that database-related tasks are isolated from the main application logic, reducing the risk of thread contention or deadlock in the main application.
 
 A side benefit is a real-world example of a cross-threaded application using the delegate library. 
@@ -241,28 +251,37 @@ The `main()` loop executes example code.
 ```cpp
 int main(void)
 {
+    std::remove("async_mutithread_example.db");
+    std::remove("async_sqlite_simple_example.db");
+
     // Create all worker threads
+    nonBlockingAsyncThread.CreateThread();
     for (int i=0; i<WORKER_THREAD_CNT; i++)
         workerThreads[i].CreateThread();
 
     // Initialize async sqlite3 interface
     async::sqlite3_init_async();
 
-    // Run simple example. Each database call is invoked on the SQLite internal thread.
-    async_sqlite_simple_example();
+    // Run all examples
+    example1();
+    example2();
+    auto blockingDuration = example3();
+    auto nonBlockingDuration = example4();
 
-    // Run simple example entirely on the internal async SQLite thread. This shows how 
-    // to execute multiple SQL commands uninterrupted.
-    DelegateLib::DelegateThread* sqlThread = async::sqlite3_get_thread();
-    auto delegate = DelegateLib::MakeDelegate(&async_sqlite_simple_example, *sqlThread, std::chrono::milliseconds::max());
-    delegate.AsyncInvoke();
-
-    // Run multithreaded example
-    async_mutithread_example();
+    // Wait for example4() to complete on nonBlockingAsyncThread
+    while (!completeFlag)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 
     // Exit all worker threads
+    nonBlockingAsyncThread.ExitThread();
     for (int i = 0; i < WORKER_THREAD_CNT; i++)
         workerThreads[i].ExitThread();
+
+    // Compare blocking and non-blocking execution times
+    std::cout << "Blocking Time: " << blockingDuration.count() << " microseconds." << std::endl;
+    std::cout << "Non-Blocking Time: " << nonBlockingDuration.count() << " microseconds." << std::endl;
 
 	return 0;
 }
@@ -349,23 +368,29 @@ int async_sqlite_simple_example()
 
 ## Simple Example Block Execute
 
-The previous example generated one queue message per `async` API call. Alternatively, the entire `async_sqlite_simple_example()` function can be executed on the `SQLiteThread`. 
+The previous example generated one queue message per `async` API call. Alternatively, the entire `async_sqlite_simple_example()` function can be executed on the `SQLiteThread`. An asynchronous delegate is created to invoke `async_sqlite_simple_example()` on `sqlThread`. Since all `async::sqlite3_<func>` calls are already executed on `sqlThread`, the helper function `AsyncInvoke()` will not generate a queue message when calling each database API. In this way, all the database interactions within `async_sqlite_simple_example()` are atomic and cannot be interrupted by other operations on the database.
 
 ```cpp
-// Run simple example entirely on the internal async SQLite thread. This shows how 
-// to execute multiple SQL commands uninterrupted.
+// Get the internal SQLite async interface thread
 DelegateLib::DelegateThread* sqlThread = async::sqlite3_get_thread();
-auto delegate = DelegateLib::MakeDelegate(&async_sqlite_simple_example, *sqlThread, async::MAX_WAIT);
-auto retVal = delegate.AsyncInvoke();
-if (retVal.has_value())
-    printf_safe("Return Value: %d\n", retVal.value());
-```
 
-A delegate callback within `async_sqlite_simple_example()` could be used to notify another thread when the asynchronous operation completes.
+// Create an asynchronous blocking delegate to invoke async_sqlite_simple_example()
+auto delegate = DelegateLib::MakeDelegate(&async_sqlite_simple_example, *sqlThread, async::MAX_WAIT);
+
+// Invoke async_sqlite_simple_example() on sqlThread and wait for the retVal
+auto retVal = delegate.AsyncInvoke();
+
+// If retVal has a value then the asynchronous function call succeeded
+if (retVal.has_value())
+{
+    // The async_sqlite_simple_example() return value is stored in retVal.value()
+    printf_safe("Return Value: %d\n", retVal.value());
+}
+```
 
 ## Multithread Example
 
-The `async_mutithread_example()` uses two separate threads to insert into the database concurrently. The lambda function `WriteDatabaseLambda` is invoked by two threads. When both worker threads are complete, the `async_multithread_example()` function returns.
+The `async_mutithread_example()` uses two separate threads to insert into the database concurrently. The lambda function `WriteDatabaseLambda` is executed by two threads. When both worker threads are complete, the `async_multithread_example()` function returns.
 
 ```cpp
 // Async SQLite multithread example. The WriteDatabaseLambda() function is called 
@@ -453,9 +478,10 @@ int async_mutithread_example()
 
             cv.notify_all();  // Notify waiting threads time to exit
         }
-    };
+    };  // End Lambda
 
-    // Invoke WriteDatabaseLambda lambda function on worker thread
+    // Invoke WriteDatabaseLambda lambda function on worker threads
+    ready = false;
     for (int i = 0; i < WORKER_THREAD_CNT; i++)
     {
         // Create an async delegate to invoke WriteDatabaseLambda()
@@ -475,9 +501,78 @@ int async_mutithread_example()
 
     // Step 5: Close the database connection
     async::sqlite3_close(db_multithread);
+
+    // Invoke delegate callback indicating function is compelete
+    completeCallback(0);
     return 0;
 }
 ```
+
+The `async_mutithread_example()` is run synchronously and asynchronously to illustrate the execution time differences from the calling thread's perspective. When using non-blocking, the calling thread is able to proceed without waiting for  lengthy database operations.
+
+```
+Blocking Time: 459135 microseconds.
+Non-Blocking Time: 17 microseconds.
+```
+
+### Synchronous Blocking Execution
+
+The blocking `example3()` calls `async_mutithread_example()` directly. The SQLite database calls within `async_mutithread_example()` are asynchronous, however the caller must wait for all database operations to complete.
+
+```cpp
+// Run multithreaded example (blocking) and return the execution time
+std::chrono::microseconds example3()
+{
+    auto blockingStart = std::chrono::high_resolution_clock::now();
+
+    // Call example and wait for completion
+    int retVal = async_mutithread_example();
+
+    auto blockingEnd = std::chrono::high_resolution_clock::now();
+    auto blockingDuration = std::chrono::duration_cast<std::chrono::microseconds>(blockingEnd - blockingStart);
+
+    return blockingDuration;
+}
+```
+
+### Asynchronous Non-Blocking Execution 
+
+The non-blocking `example4()` invokes `async_multithread_example()` asynchronously on `nonBlockingAsyncThread` without waiting for the call to complete. A callback is used to signal completion should the caller need notification. The `callbackComplete` delegate invokes the `CompleteCallbackLambda` lambda callback just before `async_multithread_example()`  exits.
+
+```cpp
+// Run the multithreaded example (non-blocking) on nonBlockingAsyncThread thread and 
+// return the execution time.
+std::chrono::microseconds example4()
+{
+    completeFlag = false;
+
+    // Lambda function to receive the complete callback
+    auto CompleteCallbackLambda = +[](int retVal) -> void
+    {
+        completeFlag = true;
+    };
+
+    // Register with delegate to receive callback
+    completeCallback += MakeDelegate(CompleteCallbackLambda);
+
+    auto nonBlockingStart = std::chrono::high_resolution_clock::now();
+
+    // Create a delegate to execute on nonBlockingAsyncThread without waiting for completion (NO_WAIT)
+    auto noWaitDelegate = DelegateLib::MakeDelegate(&async_mutithread_example, nonBlockingAsyncThread, async::NO_WAIT);
+
+    // Call async_mutithread_example() on nonBlockingAsyncThread and don't wait for it to complete
+    auto retVal = noWaitDelegate.AsyncInvoke();
+    if (retVal.has_value())   // have_value() will be false; not waiting for return value
+        printf_safe("Return Value: %d\n", retVal.value());
+
+    auto nonBlockingEnd = std::chrono::high_resolution_clock::now();
+    auto nonBlockingDuration = std::chrono::duration_cast<std::chrono::microseconds>(nonBlockingEnd - nonBlockingStart);
+
+    return nonBlockingDuration;
+}
+```
+
+### Test Results
 
 Use *DB Browser for SQLite* tool to examine the results. Notice the interleaving of data by both threads.
 
