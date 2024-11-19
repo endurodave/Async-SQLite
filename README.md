@@ -246,7 +246,7 @@ auto AsyncInvoke(Func func, Timeout timeout, Args&&... args)
 
 # Examples
 
-The `main()` loop executes example code.
+The `main()` function executes example code.
 
 ```cpp
 int main(void)
@@ -283,7 +283,7 @@ int main(void)
     std::cout << "Blocking Time: " << blockingDuration.count() << " microseconds." << std::endl;
     std::cout << "Non-Blocking Time: " << nonBlockingDuration.count() << " microseconds." << std::endl;
 
-	return 0;
+    return 0;
 }
 ```
 

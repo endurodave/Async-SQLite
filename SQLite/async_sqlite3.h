@@ -21,27 +21,137 @@ namespace async
     // Get a pointer to the internal thread
     DelegateLib::DelegateThread* sqlite3_get_thread(void);
 
+
     SQLITE_API int sqlite3_open(
         const char* filename,   /* Database filename (UTF-8) */
         sqlite3** ppDb,         /* OUT: SQLite db handle */
         std::chrono::milliseconds timeout = MAX_WAIT
     );
 
-    SQLITE_API int sqlite3_exec(
-        sqlite3* db,                /* The database on which the SQL executes */
-        const char* zSql,           /* The SQL to be executed */
-        sqlite3_callback xCallback, /* Invoke this callback routine */
-        void* pArg,                 /* First argument to xCallback() */
-        char** pzErrMsg,            /* Write error messages here */
-        std::chrono::milliseconds timeout = MAX_WAIT
+    // Opening a database connection with flags
+    SQLITE_API int sqlite3_open_v2(
+        const char* filename,             /* Database filename (UTF-8) */
+        sqlite3** ppDb,                   /* OUT: SQLite db handle */
+        int flags,                        /* Open flags */
+        const char* zVfs,                 /* Optional VFS name */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
     );
 
+    // Closing a database connection
     SQLITE_API int sqlite3_close(
-        sqlite3* db,
-        std::chrono::milliseconds timeout = MAX_WAIT
+        sqlite3* db,                     /* Database handle */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
     );
 
-    // TODO: Add more sqlite async API's as necessary
+    // Preparing an SQL statement
+    SQLITE_API int sqlite3_prepare_v2(
+        sqlite3* db,                     /* Database handle */
+        const char* sql,                  /* SQL query */
+        int nBytes,                       /* Byte length of SQL query */
+        sqlite3_stmt** ppStmt,            /* Prepared statement */
+        const char** pzTail,              /* Unused portion of SQL query */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Finalizing a prepared statement
+    SQLITE_API int sqlite3_finalize(
+        sqlite3_stmt* pStmt,              /* Statement to finalize */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Step through the prepared statement (execute)
+    SQLITE_API int sqlite3_step(
+        sqlite3_stmt* pStmt,              /* Statement to step through */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Binding values to a prepared statement
+    SQLITE_API int sqlite3_bind_int(
+        sqlite3_stmt* pStmt,              /* Statement to bind to */
+        int idx,                          /* Parameter index (1-based) */
+        int value,                        /* Value to bind */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    SQLITE_API int sqlite3_bind_text(
+        sqlite3_stmt* pStmt,              /* Statement to bind to */
+        int idx,                          /* Parameter index (1-based) */
+        const char* value,                /* Text value to bind */
+        int n,                            /* Length of text */
+        sqlite3_destructor_type dtor,     /* Destructor for the string */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Getting the last error message
+    SQLITE_API const char* sqlite3_errmsg(
+        sqlite3* db,                     /* Database handle */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Get the number of columns in a query result
+    SQLITE_API int sqlite3_column_count(
+        sqlite3_stmt* pStmt,              /* Statement */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Getting the column name
+    SQLITE_API const char* sqlite3_column_name(
+        sqlite3_stmt* pStmt,              /* Statement */
+        int col,                          /* Column index */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Getting column text (for textual data)
+    SQLITE_API const unsigned char* sqlite3_column_text(
+        sqlite3_stmt* pStmt,              /* Statement */
+        int col,                          /* Column index */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Executing a simple SQL query (non-prepared statement)
+    SQLITE_API int sqlite3_exec(
+        sqlite3* db,                     /* Database handle */
+        const char* sql,                 /* SQL query */
+        sqlite3_callback callback,       /* Callback function */
+        void* pArg,                      /* Callback argument */
+        char** errMsg,                   /* Error message */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Beginning a transaction
+    SQLITE_API int sqlite3_exec_begin(
+        sqlite3* db,                     /* Database handle */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Committing a transaction
+    SQLITE_API int sqlite3_exec_commit(
+        sqlite3* db,                     /* Database handle */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Rolling back a transaction
+    SQLITE_API int sqlite3_exec_rollback(
+        sqlite3* db,                     /* Database handle */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Getting the row count from a query result
+    SQLITE_API int sqlite3_changes(
+        sqlite3* db,                     /* Database handle */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    // Getting database status information
+    SQLITE_API int sqlite3_db_status(
+        sqlite3* db,                     /* Database handle */
+        int op,                           /* Status operation */
+        int* pCurrent,                   /* Current value of status */
+        int* pHighwater,                 /* Highwater mark */
+        int resetFlag,                   /* Reset status or not */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
 }
 
 #endif

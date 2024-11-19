@@ -14,6 +14,7 @@
 #include <string>
 #include <iostream>
 #include "async_sqlite3.h"
+#include "async_sqlite3_ut.h"
 
 using namespace std;
 using namespace DelegateLib;
@@ -336,6 +337,9 @@ int main(void)
     // Initialize async sqlite3 interface
     async::sqlite3_init_async();
 
+    // Optionally run unit tests
+    RunUnitTests();
+
     // Run all examples
     example1();
     example2();
@@ -357,6 +361,6 @@ int main(void)
     std::cout << "Blocking Time: " << blockingDuration.count() << " microseconds." << std::endl;
     std::cout << "Non-Blocking Time: " << nonBlockingDuration.count() << " microseconds." << std::endl;
 
-	return 0;
+    return 0;
 }
 
