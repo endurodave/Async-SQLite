@@ -101,13 +101,6 @@ namespace async
         std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
     );
 
-    // Getting column text (for textual data)
-    SQLITE_API const unsigned char* sqlite3_column_text(
-        sqlite3_stmt* pStmt,              /* Statement */
-        int col,                          /* Column index */
-        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
-    );
-
     // Executing a simple SQL query (non-prepared statement)
     SQLITE_API int sqlite3_exec(
         sqlite3* db,                     /* Database handle */
@@ -152,6 +145,25 @@ namespace async
         std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
     );
 
+    SQLITE_API const void* sqlite3_column_blob(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API double sqlite3_column_double(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API int sqlite3_column_int(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API sqlite3_int64 sqlite3_column_int64(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API const unsigned char* sqlite3_column_text(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API const void* sqlite3_column_text16(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API sqlite3_value* sqlite3_column_value(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API int sqlite3_column_bytes(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API int sqlite3_column_bytes16(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API int sqlite3_column_type(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
+
+#if 0
+    SQLITE_API void* sqlite3_malloc(int, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API void* sqlite3_malloc64(sqlite3_uint64, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API void* sqlite3_realloc(void*, int, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API void* sqlite3_realloc64(void*, sqlite3_uint64, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API void sqlite3_free(void*, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API sqlite3_uint64 sqlite3_msize(void*, std::chrono::milliseconds timeout = MAX_WAIT);
+#endif
 }
 
 #endif

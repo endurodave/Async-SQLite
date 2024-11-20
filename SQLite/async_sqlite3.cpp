@@ -51,6 +51,14 @@ namespace async
                     {
                         return static_cast<const unsigned char*>(nullptr);
                     }
+                    else if constexpr (std::is_same_v<RetType, sqlite3_value*>)
+                    {
+                        return static_cast<sqlite3_value*>(nullptr);
+                    }
+                    else if constexpr (std::is_same_v<RetType, const void*>)
+                    {
+                        return static_cast<const void*>(nullptr);
+                    }
                     else
                     {
                         return nullptr;  // For any other pointer types (if any), return nullptr
@@ -189,15 +197,6 @@ namespace async
         return retVal;
     }
 
-    SQLITE_API const unsigned char* sqlite3_column_text(
-        sqlite3_stmt* pStmt,    /* Statement */
-        int col,                /* Column index */
-        std::chrono::milliseconds timeout
-    ) {
-        auto retVal = AsyncInvoke(::sqlite3_column_text, timeout, pStmt, col);
-        return retVal;
-    }
-
     SQLITE_API int sqlite3_exec(
         sqlite3* db,             /* Database handle */
         const char* sql,         /* SQL query */
@@ -243,6 +242,146 @@ namespace async
         return retVal;
     }
 
+    SQLITE_API const void* sqlite3_column_blob(
+        sqlite3_stmt* pStmt,    /* Statement */
+        int col,                /* Column index */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_column_blob, timeout, pStmt, col);
+        return retVal;
+    }
+
+    SQLITE_API double sqlite3_column_double(
+        sqlite3_stmt* pStmt,    /* Statement */
+        int col,                /* Column index */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_column_double, timeout, pStmt, col);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_column_int(
+        sqlite3_stmt* pStmt,    /* Statement */
+        int col,                /* Column index */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_column_int, timeout, pStmt, col);
+        return retVal;
+    }
+
+    SQLITE_API sqlite3_int64 sqlite3_column_int64(
+        sqlite3_stmt* pStmt,    /* Statement */
+        int col,                /* Column index */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_column_int64, timeout, pStmt, col);
+        return retVal;
+    }
+
+    SQLITE_API const unsigned char* sqlite3_column_text(
+        sqlite3_stmt* pStmt,    /* Statement */
+        int col,                /* Column index */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_column_text, timeout, pStmt, col);
+        return retVal;
+    }
+
+    SQLITE_API const void* sqlite3_column_text16(
+        sqlite3_stmt* pStmt,    /* Statement */
+        int col,                /* Column index */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_column_text16, timeout, pStmt, col);
+        return retVal;
+    }
+
+    SQLITE_API sqlite3_value* sqlite3_column_value(
+        sqlite3_stmt* pStmt,    /* Statement */
+        int col,                /* Column index */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_column_value, timeout, pStmt, col);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_column_bytes(
+        sqlite3_stmt* pStmt,    /* Statement */
+        int col,                /* Column index */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_column_bytes, timeout, pStmt, col);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_column_bytes16(
+        sqlite3_stmt* pStmt,    /* Statement */
+        int col,                /* Column index */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_column_bytes16, timeout, pStmt, col);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_column_type(
+        sqlite3_stmt* pStmt,    /* Statement */
+        int col,                /* Column index */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_column_type, timeout, pStmt, col);
+        return retVal;
+    }
+
+#if 0
+    SQLITE_API void* sqlite3_malloc(
+        int size,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_malloc, timeout, size);
+        return retVal;
+    }
+
+    SQLITE_API void* sqlite3_malloc64(
+        sqlite3_uint64 size,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_malloc64, timeout, size);
+        return retVal;
+    }
+
+    SQLITE_API void* sqlite3_realloc(
+        void* ptr,
+        int size,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_realloc, timeout, ptr, size);
+        return retVal;
+    }
+
+    SQLITE_API void* sqlite3_realloc64(
+        void* ptr,
+        sqlite3_uint64 size,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_realloc64, timeout, ptr, size);
+        return retVal;
+    }
+
+    SQLITE_API void sqlite3_free(
+        void* ptr,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_free, timeout, ptr);
+    }
+
+    SQLITE_API sqlite3_uint64 sqlite3_msize(
+        void* ptr,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_msize, timeout, ptr);
+        return retVal;
+    }
+#endif
 }  // namespace async
 
 

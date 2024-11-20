@@ -11,8 +11,9 @@ using namespace async;
 
 // Helper function to open a database
 sqlite3* openTestDatabase(std::chrono::milliseconds timeout = std::chrono::milliseconds(5000)) {
+    remove("test.db");
     sqlite3* db = nullptr;
-    int result = sqlite3_open("test.db", &db, timeout);
+    int result = async::sqlite3_open("test.db", &db, timeout);
     assert(result == SQLITE_OK);  // Ensure db is opened successfully
     return db;
 }
@@ -20,7 +21,7 @@ sqlite3* openTestDatabase(std::chrono::milliseconds timeout = std::chrono::milli
 // Helper function to execute an SQL query
 void execTestSQL(sqlite3* db, const std::string& sql, std::chrono::milliseconds timeout = std::chrono::milliseconds(5000)) {
     char* errMsg = nullptr;
-    int result = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg, timeout);
+    int result = async::sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg, timeout);
     assert(result == SQLITE_OK);  // Ensure the query executed successfully
     if (errMsg) {
         sqlite3_free(errMsg);
@@ -29,7 +30,7 @@ void execTestSQL(sqlite3* db, const std::string& sql, std::chrono::milliseconds 
 
 // Helper function to fetch column text from a query result
 const char* getColumnText(sqlite3_stmt* stmt, int col, std::chrono::milliseconds timeout = std::chrono::milliseconds(5000)) {
-    const unsigned char* text = sqlite3_column_text(stmt, col, timeout);
+    const unsigned char* text = async::sqlite3_column_text(stmt, col, timeout);
     assert(text != nullptr);  // Ensure the column text is not null
     return (const char*)text;
 }
@@ -88,7 +89,7 @@ void testSqliteColumnTextAsync() {
 
     if (async::sqlite3_step(stmt) == SQLITE_ROW) {
         // Get the text from the first column (name)
-        const unsigned char* name = reinterpret_cast<const unsigned char*>(sqlite3_column_text(stmt, 0, std::chrono::milliseconds(5000)));
+        const unsigned char* name = sqlite3_column_text(stmt, 0, std::chrono::milliseconds(5000));
 
         // Convert unsigned char* to std::string for comparison
         std::string nameStr(reinterpret_cast<const char*>(name));
@@ -161,7 +162,7 @@ int RunUnitTests()
 {
     testSqliteOpenAsync();
     testSqliteExecAsync();
-    //testSqliteColumnTextAsync();
+    testSqliteColumnTextAsync();
     //testSqlite3BindIntAsync();
 
     std::cout << "All tests passed!" << std::endl;
