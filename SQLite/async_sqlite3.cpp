@@ -40,46 +40,32 @@ namespace async
             }
             else
             {
-                if constexpr (std::is_pointer_v<RetType>)
+                if constexpr (std::is_void_v<RetType>)
                 {
-                    // If return type is a pointer, we need to explicitly return nullptr of the correct type
-                    if constexpr (std::is_same_v<RetType, const char*>)
-                    {
-                        return static_cast<const char*>(nullptr);
-                    }
-                    else if constexpr (std::is_same_v<RetType, const unsigned char*>)
-                    {
-                        return static_cast<const unsigned char*>(nullptr);
-                    }
-                    else if constexpr (std::is_same_v<RetType, sqlite3_value*>)
-                    {
-                        return static_cast<sqlite3_value*>(nullptr);
-                    }
-                    else if constexpr (std::is_same_v<RetType, const void*>)
-                    {
-                        return static_cast<const void*>(nullptr);
-                    }
-                    else
-                    {
-                        return nullptr;  // For any other pointer types (if any), return nullptr
-                    }
+                    // If return type is void, we do nothing, as void functions don't return values
+                    RetType{};
+                }
+                else if constexpr (std::is_pointer_v<RetType>)
+                {
+                    return static_cast<RetType>(nullptr);  // Handle pointer types
                 }
                 else if constexpr (std::is_same_v<RetType, int>)
                 {
-                    // Special case for int, return SQLITE_ERROR
-                    return SQLITE_ERROR;
+                    return SQLITE_ERROR;  // Special case for int
                 }
                 else
                 {
-                    // Return default-constructed value of the return type if the async call fails
-                    return RetType{};
+                    return RetType{};  // Default case
                 }
             }
         }
         else
         {
-            // Invoke the target function synchronously since we're already executing on SQLiteThread
-            return func(std::forward<Args>(args)...);
+            // Invoke target function synchronously since we're already executing on SQLiteThread
+            if constexpr (std::is_void_v<RetType>)
+                func(std::forward<Args>(args)...);          // Synchronous call
+            else
+                return func(std::forward<Args>(args)...);   // Synchronous call
         }
     }
 
@@ -332,7 +318,6 @@ namespace async
         return retVal;
     }
 
-#if 0
     SQLITE_API void* sqlite3_malloc(
         int size,
         std::chrono::milliseconds timeout
@@ -381,7 +366,6 @@ namespace async
         auto retVal = AsyncInvoke(::sqlite3_msize, timeout, ptr);
         return retVal;
     }
-#endif
 }  // namespace async
 
 

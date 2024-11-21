@@ -24,7 +24,7 @@ void execTestSQL(sqlite3* db, const std::string& sql, std::chrono::milliseconds 
     int result = async::sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg, timeout);
     assert(result == SQLITE_OK);  // Ensure the query executed successfully
     if (errMsg) {
-        sqlite3_free(errMsg);
+        async::sqlite3_free(errMsg);
     }
 }
 

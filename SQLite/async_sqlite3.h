@@ -156,14 +156,12 @@ namespace async
     SQLITE_API int sqlite3_column_bytes16(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API int sqlite3_column_type(sqlite3_stmt*, int iCol, std::chrono::milliseconds timeout = MAX_WAIT);
 
-#if 0
     SQLITE_API void* sqlite3_malloc(int, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API void* sqlite3_malloc64(sqlite3_uint64, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API void* sqlite3_realloc(void*, int, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API void* sqlite3_realloc64(void*, sqlite3_uint64, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API void sqlite3_free(void*, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API sqlite3_uint64 sqlite3_msize(void*, std::chrono::milliseconds timeout = MAX_WAIT);
-#endif
 }
 
 #endif
