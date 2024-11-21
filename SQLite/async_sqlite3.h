@@ -82,12 +82,6 @@ namespace async
         std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
     );
 
-    // Getting the last error message
-    SQLITE_API const char* sqlite3_errmsg(
-        sqlite3* db,                     /* Database handle */
-        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
-    );
-
     // Get the number of columns in a query result
     SQLITE_API int sqlite3_column_count(
         sqlite3_stmt* pStmt,              /* Statement */
@@ -162,6 +156,13 @@ namespace async
     SQLITE_API void* sqlite3_realloc64(void*, sqlite3_uint64, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API void sqlite3_free(void*, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API sqlite3_uint64 sqlite3_msize(void*, std::chrono::milliseconds timeout = MAX_WAIT);
+
+    SQLITE_API int sqlite3_errcode(sqlite3* db, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API int sqlite3_extended_errcode(sqlite3* db, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API const char* sqlite3_errmsg(sqlite3*, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API const void* sqlite3_errmsg16(sqlite3*, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API const char* sqlite3_errstr(int, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API int sqlite3_error_offset(sqlite3* db, std::chrono::milliseconds timeout = MAX_WAIT);
 }
 
 #endif

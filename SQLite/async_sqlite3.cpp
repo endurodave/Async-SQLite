@@ -158,14 +158,6 @@ namespace async
         return retVal;
     }
 
-    SQLITE_API const char* sqlite3_errmsg(
-        sqlite3* db,            /* Database handle */
-        std::chrono::milliseconds timeout
-    ) {
-        auto retVal = AsyncInvoke(::sqlite3_errmsg, timeout, db);
-        return retVal;
-    }
-
     SQLITE_API int sqlite3_column_count(
         sqlite3_stmt* pStmt,    /* Statement */
         std::chrono::milliseconds timeout
@@ -363,9 +355,51 @@ namespace async
         void* ptr,
         std::chrono::milliseconds timeout
     ) {
-        auto retVal = AsyncInvoke(::sqlite3_msize, timeout, ptr);
-        return retVal;
+        return AsyncInvoke(::sqlite3_msize, timeout, ptr);
     }
+
+    SQLITE_API int sqlite3_errcode(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_errcode, timeout, db);
+    }
+
+    SQLITE_API int sqlite3_extended_errcode(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(&::sqlite3_extended_errcode, timeout, db);
+    }
+
+    SQLITE_API const char* sqlite3_errmsg(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(&::sqlite3_errmsg, timeout, db);
+    }
+
+    SQLITE_API const void* sqlite3_errmsg16(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(&::sqlite3_errmsg16, timeout, db);
+    }
+
+    SQLITE_API const char* sqlite3_errstr(
+        int errorCode,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(&::sqlite3_errstr, timeout, errorCode);
+    }
+
+    SQLITE_API int sqlite3_error_offset(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(&::sqlite3_error_offset, timeout, db);
+    }
+
 }  // namespace async
 
 
