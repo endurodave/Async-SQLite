@@ -76,6 +76,35 @@ namespace async
         return &SQLiteThread;
     }
 
+    SQLITE_API int sqlite3_set_authorizer(
+        sqlite3* db,
+        int (*xAuth)(void*, int, const char*, const char*, const char*, const char*),
+        void* pArg,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_set_authorizer, timeout, db, xAuth, pArg);
+    }
+
+    SQLITE_API int sqlite3_trace_v2(
+        sqlite3* db,                               /* Trace this connection */
+        unsigned mTrace,                           /* Mask of events to be traced */
+        int(*xTrace)(unsigned, void*, void*, void*),  /* Callback to invoke */
+        void* pArg,                                /* Context */
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_trace_v2, timeout, db, mTrace, xTrace, pArg);
+    }
+
+    SQLITE_API void sqlite3_progress_handler(
+        sqlite3* db,
+        int nOps,
+        int (*xProgress)(void*),
+        void* pArg,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_progress_handler, timeout, db, nOps, xProgress, pArg);
+    }
+
     SQLITE_API int sqlite3_open(
         const char* filename,  /* Database filename (UTF-8) */
         sqlite3** ppDb,        /* OUT: SQLite db handle */
