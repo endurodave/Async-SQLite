@@ -43,6 +43,15 @@ namespace async
         std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
     );
 
+    SQLITE_API int sqlite3_prepare(
+        sqlite3* db,            /* Database handle */
+        const char* zSql,       /* SQL statement, UTF-8 encoded */
+        int nByte,              /* Maximum length of zSql in bytes. */
+        sqlite3_stmt** ppStmt,  /* OUT: Statement handle */
+        const char** pzTail,    /* OUT: Pointer to unused portion of zSql */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
     // Preparing an SQL statement
     SQLITE_API int sqlite3_prepare_v2(
         sqlite3* db,                     /* Database handle */
@@ -50,6 +59,16 @@ namespace async
         int nBytes,                       /* Byte length of SQL query */
         sqlite3_stmt** ppStmt,            /* Prepared statement */
         const char** pzTail,              /* Unused portion of SQL query */
+        std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
+    );
+
+    SQLITE_API int sqlite3_prepare_v3(
+        sqlite3* db,            /* Database handle */
+        const char* zSql,       /* SQL statement, UTF-8 encoded */
+        int nByte,              /* Maximum length of zSql in bytes. */
+        unsigned int prepFlags, /* Zero or more SQLITE_PREPARE_ flags */
+        sqlite3_stmt** ppStmt,  /* OUT: Statement handle */
+        const char** pzTail,    /* OUT: Pointer to unused portion of zSql */
         std::chrono::milliseconds timeout = MAX_WAIT /* Timeout duration */
     );
 
@@ -157,12 +176,35 @@ namespace async
     SQLITE_API void sqlite3_free(void*, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API sqlite3_uint64 sqlite3_msize(void*, std::chrono::milliseconds timeout = MAX_WAIT);
 
+    SQLITE_API const char* sqlite3_uri_parameter(sqlite3_filename z, const char* zParam, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API int sqlite3_uri_boolean(sqlite3_filename z, const char* zParam, int bDefault, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API sqlite3_int64 sqlite3_uri_int64(sqlite3_filename, const char*, sqlite3_int64, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API const char* sqlite3_uri_key(sqlite3_filename z, int N, std::chrono::milliseconds timeout = MAX_WAIT);
+
+    SQLITE_API const char* sqlite3_filename_database(sqlite3_filename, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API const char* sqlite3_filename_journal(sqlite3_filename, std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API const char* sqlite3_filename_wal(sqlite3_filename, std::chrono::milliseconds timeout = MAX_WAIT);
+
+    SQLITE_API sqlite3_file* sqlite3_database_file_object(const char*, std::chrono::milliseconds timeout = MAX_WAIT);
+
+    SQLITE_API sqlite3_filename sqlite3_create_filename(
+        const char* zDatabase,
+        const char* zJournal,
+        const char* zWal,
+        int nParam,
+        const char** azParam,
+        std::chrono::milliseconds timeout = MAX_WAIT
+    );
+    SQLITE_API void sqlite3_free_filename(sqlite3_filename, std::chrono::milliseconds timeout = MAX_WAIT);
+
     SQLITE_API int sqlite3_errcode(sqlite3* db, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API int sqlite3_extended_errcode(sqlite3* db, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API const char* sqlite3_errmsg(sqlite3*, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API const void* sqlite3_errmsg16(sqlite3*, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API const char* sqlite3_errstr(int, std::chrono::milliseconds timeout = MAX_WAIT);
     SQLITE_API int sqlite3_error_offset(sqlite3* db, std::chrono::milliseconds timeout = MAX_WAIT);
+
+    SQLITE_API int sqlite3_limit(sqlite3*, int id, int newVal, std::chrono::milliseconds timeout = MAX_WAIT);
 }
 
 #endif

@@ -32,30 +32,20 @@ namespace async
             // Invoke the delegate target function asynchronously and wait for function call to complete
             auto retVal = delegate.AsyncInvoke(std::forward<Args>(args)...);
 
-            // Did the async function call succeed?
-            if (retVal.has_value())
+            if constexpr (std::is_void<RetType>::value == false)
             {
-                // Return the target function's return value
-                return retVal.value();
-            }
-            else
-            {
-                if constexpr (std::is_void_v<RetType>)
+                // Did async function call succeed?
+                if (retVal.has_value())
                 {
-                    // If return type is void, we do nothing, as void functions don't return values
-                    RetType{};
-                }
-                else if constexpr (std::is_pointer_v<RetType>)
-                {
-                    return static_cast<RetType>(nullptr);  // Handle pointer types
-                }
-                else if constexpr (std::is_same_v<RetType, int>)
-                {
-                    return SQLITE_ERROR;  // Special case for int
+                    // Return the return value to caller
+                    return std::any_cast<RetType>(retVal.value());
                 }
                 else
                 {
-                    return RetType{};  // Default case
+                    if constexpr (std::is_same_v<RetType, int>)
+                        return SQLITE_ERROR;  // Special case for int
+                    else
+                        return RetType();
                 }
             }
         }
@@ -63,9 +53,15 @@ namespace async
         {
             // Invoke target function synchronously since we're already executing on SQLiteThread
             if constexpr (std::is_void_v<RetType>)
-                func(std::forward<Args>(args)...);          // Synchronous call
+            {
+                func(std::forward<Args>(args)...); // Synchronous call
+                return RetType(); // No return value for void
+            }
             else
-                return func(std::forward<Args>(args)...);   // Synchronous call
+            {
+                auto retVal = func(std::forward<Args>(args)...);  // Return the result for non-void types
+                return std::any_cast<RetType>(retVal);
+            }
         }
     }
 
@@ -108,6 +104,18 @@ namespace async
         return retVal;
     }
 
+    SQLITE_API int sqlite3_prepare(
+        sqlite3* db,            /* Database handle */
+        const char* zSql,       /* SQL statement, UTF-8 encoded */
+        int nByte,              /* Maximum length of zSql in bytes. */
+        sqlite3_stmt** ppStmt,  /* OUT: Statement handle */
+        const char** pzTail,    /* OUT: Pointer to unused portion of zSql */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_prepare, timeout, db, zSql, nByte, ppStmt, pzTail);
+        return retVal;
+    }
+
     SQLITE_API int sqlite3_prepare_v2(
         sqlite3* db,            /* Database handle */
         const char* sql,        /* SQL query */
@@ -117,6 +125,19 @@ namespace async
         std::chrono::milliseconds timeout
     ) {
         auto retVal = AsyncInvoke(::sqlite3_prepare_v2, timeout, db, sql, nBytes, ppStmt, pzTail);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_prepare_v3(
+        sqlite3* db,            /* Database handle */
+        const char* zSql,       /* SQL statement, UTF-8 encoded */
+        int nByte,              /* Maximum length of zSql in bytes. */
+        unsigned int prepFlags, /* Zero or more SQLITE_PREPARE_ flags */
+        sqlite3_stmt** ppStmt,  /* OUT: Statement handle */
+        const char** pzTail,    /* OUT: Pointer to unused portion of zSql */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_prepare_v3, timeout, db, zSql, nByte, prepFlags, ppStmt, pzTail);
         return retVal;
     }
 
@@ -358,6 +379,86 @@ namespace async
         return AsyncInvoke(::sqlite3_msize, timeout, ptr);
     }
 
+    SQLITE_API const char* sqlite3_uri_parameter(
+        const char* zFilename, 
+        const char* zParam,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_uri_parameter, timeout, zFilename, zParam);
+    }
+
+    SQLITE_API int sqlite3_uri_boolean(
+        const char* zFilename, 
+        const char* zParam, 
+        int bDflt,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_uri_boolean, timeout, zFilename, zParam, bDflt);
+    }
+
+    SQLITE_API sqlite3_int64 sqlite3_uri_int64(
+        const char* zFilename,    /* Filename as passed to xOpen */
+        const char* zParam,       /* URI parameter sought */
+        sqlite3_int64 bDflt,      /* return if parameter is missing */
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_uri_int64, timeout, zFilename, zParam, bDflt);
+    }
+
+    SQLITE_API const char* sqlite3_uri_key(
+        const char* zFilename, 
+        int N,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_uri_key, timeout, zFilename, N);
+    }
+
+    SQLITE_API const char* sqlite3_filename_database(
+        const char* zFilename,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_filename_database, timeout, zFilename);
+    }
+
+    SQLITE_API const char* sqlite3_filename_journal(
+        const char* zFilename,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_filename_journal, timeout, zFilename);
+    }
+
+    SQLITE_API const char* sqlite3_filename_wal(
+        const char* zFilename,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_filename_wal, timeout, zFilename);
+    }
+
+    SQLITE_API sqlite3_file* sqlite3_database_file_object(
+        const char* zName,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_database_file_object, timeout, zName);
+    }
+
+    SQLITE_API sqlite3_filename sqlite3_create_filename(
+        const char* zDatabase,
+        const char* zJournal,
+        const char* zWal,
+        int nParam,
+        const char** azParam,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_create_filename, timeout, zDatabase, zJournal, zWal, nParam, azParam);
+    }
+
+    SQLITE_API void sqlite3_free_filename(
+        const char* p,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_free_filename, timeout, p);
+    }
+
     SQLITE_API int sqlite3_errcode(
         sqlite3* db,
         std::chrono::milliseconds timeout
@@ -398,6 +499,15 @@ namespace async
         std::chrono::milliseconds timeout
     ) {
         return AsyncInvoke(&::sqlite3_error_offset, timeout, db);
+    }
+
+    SQLITE_API int sqlite3_limit(
+        sqlite3* db, 
+        int limitId, 
+        int newLimit,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(&::sqlite3_limit, timeout, db, limitId, newLimit);
     }
 
 }  // namespace async
