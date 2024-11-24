@@ -13,17 +13,12 @@ namespace async
 {
     #undef max  // Prevent compiler error on next line if max is defined
     constexpr auto MAX_WAIT = std::chrono::milliseconds::max();
-    constexpr auto NO_WAIT = std::chrono::milliseconds(0);
 
     // Call one-time at application startup
     void sqlite3_init_async(void);
 
-    SQLITE_API int sqlite3_set_authorizer(
-        sqlite3*,
-        int (*xAuth)(void*, int, const char*, const char*, const char*, const char*),
-        void* pUserData,
-        std::chrono::milliseconds timeout = MAX_WAIT
-    );
+    // Get a pointer to the internal thread
+    DelegateLib::DelegateThread* sqlite3_get_thread(void);
 
     SQLITE_API int sqlite3_trace_v2(
         sqlite3*,
@@ -34,9 +29,6 @@ namespace async
     );
 
     SQLITE_API void sqlite3_progress_handler(sqlite3*, int, int(*)(void*), void*, std::chrono::milliseconds timeout = MAX_WAIT);
-
-    // Get a pointer to the internal thread
-    DelegateLib::DelegateThread* sqlite3_get_thread(void);
 
     SQLITE_API int sqlite3_open(
         const char* filename,   /* Database filename (UTF-8) */
@@ -221,6 +213,33 @@ namespace async
     SQLITE_API int sqlite3_error_offset(sqlite3* db, std::chrono::milliseconds timeout = MAX_WAIT);
 
     SQLITE_API int sqlite3_limit(sqlite3*, int id, int newVal, std::chrono::milliseconds timeout = MAX_WAIT);
+
+    SQLITE_API sqlite3_int64 sqlite3_memory_used(std::chrono::milliseconds timeout = MAX_WAIT);
+    SQLITE_API sqlite3_int64 sqlite3_memory_highwater(int resetFlag, std::chrono::milliseconds timeout = MAX_WAIT);
+
+    SQLITE_API void sqlite3_randomness(int N, void* P, std::chrono::milliseconds timeout = MAX_WAIT);
+
+    SQLITE_API int sqlite3_set_authorizer(
+        sqlite3*,
+        int (*xAuth)(void*, int, const char*, const char*, const char*, const char*),
+        void* pUserData,
+        std::chrono::milliseconds timeout = MAX_WAIT
+    );
+
+    SQLITE_API int sqlite3_get_table(
+        sqlite3* db,          /* An open database */
+        const char* zSql,     /* SQL to be evaluated */
+        char*** pazResult,    /* Results of the query */
+        int* pnRow,           /* Number of result rows written here */
+        int* pnColumn,        /* Number of result columns written here */
+        char** pzErrmsg,      /* Error msg written here */
+        std::chrono::milliseconds timeout = MAX_WAIT
+    );
+    SQLITE_API void sqlite3_free_table(char** result, std::chrono::milliseconds timeout = MAX_WAIT);
+
+    SQLITE_API int sqlite3_busy_timeout(sqlite3*, int ms, std::chrono::milliseconds timeout = MAX_WAIT);
+
+    SQLITE_API int sqlite3_busy_handler(sqlite3*, int(*)(void*, int), void*, std::chrono::milliseconds timeout = MAX_WAIT);
 }
 
 #endif

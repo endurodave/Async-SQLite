@@ -76,15 +76,6 @@ namespace async
         return &SQLiteThread;
     }
 
-    SQLITE_API int sqlite3_set_authorizer(
-        sqlite3* db,
-        int (*xAuth)(void*, int, const char*, const char*, const char*, const char*),
-        void* pArg,
-        std::chrono::milliseconds timeout
-    ) {
-        return AsyncInvoke(::sqlite3_set_authorizer, timeout, db, xAuth, pArg);
-    }
-
     SQLITE_API int sqlite3_trace_v2(
         sqlite3* db,                               /* Trace this connection */
         unsigned mTrace,                           /* Mask of events to be traced */
@@ -537,6 +528,74 @@ namespace async
         std::chrono::milliseconds timeout
     ) {
         return AsyncInvoke(&::sqlite3_limit, timeout, db, limitId, newLimit);
+    }
+
+    SQLITE_API sqlite3_int64 sqlite3_memory_used(
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_memory_used, timeout);
+    }
+
+    SQLITE_API sqlite3_int64 sqlite3_memory_highwater(
+        int resetFlag,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_memory_highwater, timeout, resetFlag);
+    }
+
+    SQLITE_API void sqlite3_randomness(
+        int N,
+        void* P,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_randomness, timeout, N, P);
+    }
+
+    SQLITE_API int sqlite3_set_authorizer(
+        sqlite3* db,
+        int (*xAuth)(void*, int, const char*, const char*, const char*, const char*),
+        void* pArg,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_set_authorizer, timeout, db, xAuth, pArg);
+    }
+
+#if 0  // char*** not supported by delegate library
+    SQLITE_API int sqlite3_get_table(
+        sqlite3* db,          /* An open database */
+        const char* zSql,     /* SQL to be evaluated */
+        char*** pazResult,    /* Results of the query */
+        int* pnRow,           /* Number of result rows written here */
+        int* pnColumn,        /* Number of result columns written here */
+        char** pzErrmsg,      /* Error msg written here */
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_get_table, timeout, db, zSql, pazResult, pnRow, pnColumn, pzErrmsg);
+    }
+#endif
+
+    SQLITE_API void sqlite3_free_table(
+        char** result,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_free_table, timeout, result);
+    }
+
+    SQLITE_API int sqlite3_busy_timeout(
+        sqlite3* db,
+        int ms,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_busy_timeout, timeout, db, ms);
+    }
+
+    SQLITE_API int sqlite3_busy_handler(
+        sqlite3* db,
+        int (*xBusy)(void*, int),
+        void* pArg,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_busy_handler, timeout, db, xBusy, pArg);
     }
 
 }  // namespace async
