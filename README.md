@@ -199,7 +199,7 @@ template <typename Func, typename Timeout, typename... Args>
 auto AsyncInvoke(Func func, Timeout timeout, Args&&... args)
 {
     // Deduce return type of func
-    using RetType = decltype(func(std::forward<Args>(args)...));  
+    using RetType = decltype(func(std::forward<Args>(args)...));
 
     // Is the calling function executing on the SQLiteThread thread?
     if (SQLiteThread.GetThreadId() != WorkerThread::GetCurrentThreadId())
@@ -210,36 +210,36 @@ auto AsyncInvoke(Func func, Timeout timeout, Args&&... args)
         // Invoke the delegate target function asynchronously and wait for function call to complete
         auto retVal = delegate.AsyncInvoke(std::forward<Args>(args)...);
 
-        // Did the async function call succeed?
-        if (retVal.has_value())
+        if constexpr (std::is_void<RetType>::value == false)
         {
-            // Return the target functions return value
-            return retVal.value();  
-        }
-        // Else async function call failed
-        else
-        {
-            if constexpr (std::is_pointer_v<RetType>) 
+            // Did async function call succeed?
+            if (retVal.has_value())
             {
-                // If return type is a pointer, return nullptr for errors
-                return nullptr;
+                // Return the return value to caller
+                return std::any_cast<RetType>(retVal.value());
             }
-            if constexpr (std::is_same_v<RetType, int>) 
+            else
             {
-                // Special case for int, return SQLITE_ERROR
-                return SQLITE_ERROR;
-            }
-            else 
-            {
-                // Return default-constructed value of the return type if the async call fails
-                return RetType{};
+                if constexpr (std::is_same_v<RetType, int>)
+                    return SQLITE_ERROR;  // Special case for int
+                else
+                    return RetType();
             }
         }
     }
     else
     {
-        // Invoke the target function synchronously since already executing on SQLiteThread
-        return func(std::forward<Args>(args)...);
+        // Invoke target function synchronously since we're already executing on SQLiteThread
+        if constexpr (std::is_void_v<RetType>)
+        {
+            func(std::forward<Args>(args)...); // Synchronous call
+            return RetType(); // No return value for void
+        }
+        else
+        {
+            auto retVal = func(std::forward<Args>(args)...);  // Return the result for non-void types
+            return std::any_cast<RetType>(retVal);
+        }
     }
 }
 ```
@@ -261,6 +261,9 @@ int main(void)
 
     // Initialize async sqlite3 interface
     async::sqlite3_init_async();
+
+    // Optionally run unit tests
+    RunUnitTests();
 
     // Run all examples
     example1();
