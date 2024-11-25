@@ -93,7 +93,7 @@ int main(void)
 * **Atomic Operations:** Execute a series of database operations that cannot be interrupted without locks.
 * **Isolation:** Running SQLite on a private thread ensures that database-related tasks are isolated from the main application logic, reducing the risk of thread contention or deadlock in the main application.
 
-A side benefit is a real-world example of a cross-threaded application using the delegate library. 
+A side benefit is a real-world example of a multi-threaded application using the delegate library. 
 
 # Asynchronous SQLite
 
