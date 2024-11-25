@@ -560,13 +560,11 @@ std::chrono::microseconds example4()
 
     auto nonBlockingStart = std::chrono::high_resolution_clock::now();
 
-    // Create a delegate to execute on nonBlockingAsyncThread without waiting for completion (NO_WAIT)
-    auto noWaitDelegate = DelegateLib::MakeDelegate(&async_mutithread_example, nonBlockingAsyncThread, async::NO_WAIT);
+    // Create a delegate to execute on nonBlockingAsyncThread without waiting for completion
+    auto noWaitDelegate = DelegateLib::MakeDelegate(&async_mutithread_example, nonBlockingAsyncThread);
 
     // Call async_mutithread_example() on nonBlockingAsyncThread and don't wait for it to complete
-    auto retVal = noWaitDelegate.AsyncInvoke();
-    if (retVal.has_value())   // have_value() will be false; not waiting for return value
-        printf_safe("Return Value: %d\n", retVal.value());
+    noWaitDelegate.AsyncInvoke();
 
     auto nonBlockingEnd = std::chrono::high_resolution_clock::now();
     auto nonBlockingDuration = std::chrono::duration_cast<std::chrono::microseconds>(nonBlockingEnd - nonBlockingStart);
@@ -577,6 +575,6 @@ std::chrono::microseconds example4()
 
 ### Test Results
 
-Use *DB Browser for SQLite* tool to examine the results. Notice the interleaving of data by both threads.
+Use *DB Browser for SQLite* tool to examine the results. Notice the interleaving of data by both worker threads.
 
 ![Database Output](./Figure1.jpg)

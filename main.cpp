@@ -144,7 +144,7 @@ int async_mutithread_example()
     int rc;
 
     // Step 1: Open (or create) the SQLite database file
-    rc = async::sqlite3_open("async_mutithread_example.db", &db_multithread);
+    rc = async::sqlite3_open("async_multithread_example.db", &db_multithread);
 
     if (rc)
     {
@@ -324,7 +324,7 @@ std::chrono::microseconds example4()
 //------------------------------------------------------------------------------
 int main(void)
 {
-    std::remove("async_mutithread_example.db");
+    std::remove("async_multithread_example.db");
     std::remove("async_sqlite_simple_example.db");
 
     // Create all worker threads
