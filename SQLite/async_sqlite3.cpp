@@ -105,6 +105,15 @@ namespace async
         return retVal;
     }
 
+    SQLITE_API int sqlite3_open16(
+        const void* filename,   /* Database filename (UTF-16) */
+        sqlite3** ppDb,         /* OUT: SQLite db handle */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_open16, timeout, filename, ppDb);
+        return retVal;
+    }
+
     SQLITE_API int sqlite3_open_v2(
         const char* filename,   /* Database filename (UTF-8) */
         sqlite3** ppDb,         /* OUT: SQLite db handle */
@@ -121,6 +130,109 @@ namespace async
         std::chrono::milliseconds timeout
     ) {
         auto retVal = AsyncInvoke(::sqlite3_close, timeout, db);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_close_v2(
+        sqlite3* db,            /* Database handle */
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_close_v2, timeout, db);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_initialize(void) {
+        // sqlite3_initialize already threaad safe per SQLite
+        return ::sqlite3_initialize();
+    }
+
+    SQLITE_API int sqlite3_shutdown(
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_shutdown, timeout);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_extended_result_codes(
+        sqlite3* db,
+        int onoff,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_extended_result_codes, timeout, db, onoff);
+        return retVal;
+    }
+
+    SQLITE_API sqlite3_int64 sqlite3_last_insert_rowid(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_last_insert_rowid, timeout, db);
+        return retVal;
+    }
+
+    SQLITE_API void sqlite3_set_last_insert_rowid(
+        sqlite3* db,
+        sqlite3_int64 iRowid,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_set_last_insert_rowid, timeout, db, iRowid);
+    }
+
+    SQLITE_API int sqlite3_changes(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_changes, timeout, db);
+        return retVal;
+    }
+
+    SQLITE_API sqlite3_int64 sqlite3_changes64(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_changes64, timeout, db);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_total_changes(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_total_changes, timeout, db);
+        return retVal;
+    }
+
+    SQLITE_API sqlite3_int64 sqlite3_total_changes64(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_total_changes64, timeout, db);
+        return retVal;
+    }
+
+    SQLITE_API void sqlite3_interrupt(sqlite3* db) {
+        // Thread safe function call
+        ::sqlite3_interrupt(db);
+    }
+
+    SQLITE_API int sqlite3_is_interrupted(sqlite3* db) {
+        // Thread safe function call
+        return ::sqlite3_is_interrupted(db);
+    }
+
+    SQLITE_API int sqlite3_complete(
+        const char* sql,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_complete, timeout, sql);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_complete16(
+        const void* sql,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_complete16, timeout, sql);
         return retVal;
     }
 
@@ -161,11 +273,92 @@ namespace async
         return retVal;
     }
 
+    SQLITE_API int sqlite3_prepare16(
+        sqlite3* db,            /* Database handle */
+        const void* zSql,       /* SQL statement, UTF-16 encoded */
+        int nByte,              /* Maximum length of zSql in bytes. */
+        sqlite3_stmt** ppStmt,  /* OUT: Statement handle */
+        const void** pzTail,    /* OUT: Pointer to unused portion of zSql */
+        std::chrono::milliseconds timeout /* Timeout duration */
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_prepare16, timeout, db, zSql, nByte, ppStmt, pzTail);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_prepare16_v2(
+        sqlite3* db,            /* Database handle */
+        const void* zSql,       /* SQL statement, UTF-16 encoded */
+        int nByte,              /* Maximum length of zSql in bytes. */
+        sqlite3_stmt** ppStmt,  /* OUT: Statement handle */
+        const void** pzTail,    /* OUT: Pointer to unused portion of zSql */
+        std::chrono::milliseconds timeout /* Timeout duration */
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_prepare16_v2, timeout, db, zSql, nByte, ppStmt, pzTail);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_prepare16_v3(
+        sqlite3* db,            /* Database handle */
+        const void* zSql,       /* SQL statement, UTF-16 encoded */
+        int nByte,              /* Maximum length of zSql in bytes. */
+        unsigned int prepFlags, /* Zero or more SQLITE_PREPARE_ flags */
+        sqlite3_stmt** ppStmt,  /* OUT: Statement handle */
+        const void** pzTail,    /* OUT: Pointer to unused portion of zSql */
+        std::chrono::milliseconds timeout /* Timeout duration */
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_prepare16_v3, timeout, db, zSql, nByte, prepFlags, ppStmt, pzTail);
+        return retVal;
+    }
+
+    SQLITE_API const char* sqlite3_sql(
+        sqlite3_stmt* pStmt,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_sql, timeout, pStmt);
+        return retVal;
+    }
+
+    SQLITE_API char* sqlite3_expanded_sql(
+        sqlite3_stmt* pStmt,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_expanded_sql, timeout, pStmt);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_stmt_readonly(sqlite3_stmt* pStmt) {
+        // Thread safe function
+        return ::sqlite3_stmt_readonly(pStmt);
+    }
+
+    SQLITE_API int sqlite3_stmt_isexplain(sqlite3_stmt* pStmt) {
+        // Thread safe function
+        return ::sqlite3_stmt_isexplain(pStmt);
+    }
+
+    SQLITE_API int sqlite3_stmt_explain(sqlite3_stmt* pStmt, int eMode, std::chrono::milliseconds timeout) {
+        auto retVal = AsyncInvoke(::sqlite3_stmt_explain, timeout, pStmt, eMode);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_stmt_busy(sqlite3_stmt* pStmt) {
+        // Thread safe function
+        return ::sqlite3_stmt_busy(pStmt);
+    }
+
     SQLITE_API int sqlite3_finalize(
         sqlite3_stmt* pStmt,    /* Statement to finalize */
         std::chrono::milliseconds timeout
     ) {
         auto retVal = AsyncInvoke(::sqlite3_finalize, timeout, pStmt);
+        return retVal;
+    }
+
+    SQLITE_API int sqlite3_reset(
+        sqlite3_stmt* pStmt,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_reset, timeout, pStmt);
         return retVal;
     }
 
@@ -177,25 +370,11 @@ namespace async
         return retVal;
     }
 
-    SQLITE_API int sqlite3_bind_int(
-        sqlite3_stmt* pStmt,    /* Statement to bind to */
-        int idx,                /* Parameter index (1-based) */
-        int value,              /* Value to bind */
+    SQLITE_API int sqlite3_data_count(
+        sqlite3_stmt* pStmt,
         std::chrono::milliseconds timeout
     ) {
-        auto retVal = AsyncInvoke(::sqlite3_bind_int, timeout, pStmt, idx, value);
-        return retVal;
-    }
-
-    SQLITE_API int sqlite3_bind_text(
-        sqlite3_stmt* pStmt,    /* Statement to bind to */
-        int idx,                /* Parameter index (1-based) */
-        const char* value,      /* Text value to bind */
-        int n,                  /* Length of text */
-        sqlite3_destructor_type dtor, /* Destructor for the string */
-        std::chrono::milliseconds timeout
-    ) {
-        auto retVal = AsyncInvoke(::sqlite3_bind_text, timeout, pStmt, idx, value, n, dtor);
+        auto retVal = AsyncInvoke(::sqlite3_data_count, timeout, pStmt);
         return retVal;
     }
 
@@ -216,6 +395,15 @@ namespace async
         return retVal;
     }
 
+    SQLITE_API const void* sqlite3_column_name16(
+        sqlite3_stmt* pStmt,
+        int N,
+        std::chrono::milliseconds timeout
+    ) {
+        auto retVal = AsyncInvoke(::sqlite3_column_name16, timeout, pStmt, N);
+        return retVal;
+    }
+
     SQLITE_API int sqlite3_exec(
         sqlite3* db,             /* Database handle */
         const char* sql,         /* SQL query */
@@ -225,14 +413,6 @@ namespace async
         std::chrono::milliseconds timeout
     ) {
         auto retVal = AsyncInvoke(::sqlite3_exec, timeout, db, sql, callback, pArg, errMsg);
-        return retVal;
-    }
-
-    SQLITE_API int sqlite3_changes(
-        sqlite3* db,            /* Database handle */
-        std::chrono::milliseconds timeout
-    ) {
-        auto retVal = AsyncInvoke(::sqlite3_changes, timeout, db);
         return retVal;
     }
 
@@ -560,20 +740,6 @@ namespace async
         return AsyncInvoke(::sqlite3_set_authorizer, timeout, db, xAuth, pArg);
     }
 
-#if 0  // char*** not supported by delegate library
-    SQLITE_API int sqlite3_get_table(
-        sqlite3* db,          /* An open database */
-        const char* zSql,     /* SQL to be evaluated */
-        char*** pazResult,    /* Results of the query */
-        int* pnRow,           /* Number of result rows written here */
-        int* pnColumn,        /* Number of result columns written here */
-        char** pzErrmsg,      /* Error msg written here */
-        std::chrono::milliseconds timeout
-    ) {
-        return AsyncInvoke(::sqlite3_get_table, timeout, db, zSql, pazResult, pnRow, pnColumn, pzErrmsg);
-    }
-#endif
-
     SQLITE_API void sqlite3_free_table(
         char** result,
         std::chrono::milliseconds timeout
@@ -596,6 +762,791 @@ namespace async
         std::chrono::milliseconds timeout
     ) {
         return AsyncInvoke(::sqlite3_busy_handler, timeout, db, xBusy, pArg);
+    }
+
+    SQLITE_API int sqlite3_bind_blob(
+        sqlite3_stmt* pStmt,
+        int i,
+        const void* zData,
+        int nData,
+        void (*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_blob, timeout, pStmt, i, zData, nData, xDel);
+    }
+
+    SQLITE_API int sqlite3_bind_blob64(
+        sqlite3_stmt* pStmt,
+        int i,
+        const void* zData,
+        sqlite3_uint64 nData,
+        void (*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_blob64, timeout, pStmt, i, zData, nData, xDel);
+    }
+
+    SQLITE_API int sqlite3_bind_double(
+        sqlite3_stmt* pStmt,
+        int i,
+        double value,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_double, timeout, pStmt, i, value);
+    }
+
+    SQLITE_API int sqlite3_bind_int(
+        sqlite3_stmt* pStmt,
+        int i,
+        int value,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_int, timeout, pStmt, i, value);
+    }
+
+    SQLITE_API int sqlite3_bind_int64(
+        sqlite3_stmt* pStmt,
+        int i,
+        sqlite3_int64 value,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_int64, timeout, pStmt, i, value);
+    }
+
+    SQLITE_API int sqlite3_bind_null(
+        sqlite3_stmt* pStmt,
+        int i,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_null, timeout, pStmt, i);
+    }
+
+    SQLITE_API int sqlite3_bind_text(
+        sqlite3_stmt* pStmt,
+        int i,
+        const char* zData,
+        int nData,
+        void (*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_text, timeout, pStmt, i, zData, nData, xDel);
+    }
+
+    SQLITE_API int sqlite3_bind_text16(
+        sqlite3_stmt* pStmt,
+        int i,
+        const void* zData,
+        int nData,
+        void (*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_text16, timeout, pStmt, i, zData, nData, xDel);
+    }
+
+    SQLITE_API int sqlite3_bind_text64(
+        sqlite3_stmt* pStmt,
+        int i,
+        const char* zData,
+        sqlite3_uint64 nData,
+        void (*xDel)(void*),
+        unsigned char encoding,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_text64, timeout, pStmt, i, zData, nData, xDel, encoding);
+    }
+
+    SQLITE_API int sqlite3_bind_value(
+        sqlite3_stmt* pStmt,
+        int i,
+        const sqlite3_value* pValue,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_value, timeout, pStmt, i, pValue);
+    }
+
+    SQLITE_API int sqlite3_bind_pointer(
+        sqlite3_stmt* pStmt,
+        int i,
+        void* pData,
+        const char* pType,
+        void (*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_pointer, timeout, pStmt, i, pData, pType, xDel);
+    }
+
+    SQLITE_API int sqlite3_bind_zeroblob(
+        sqlite3_stmt* pStmt,
+        int i,
+        int nData,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_zeroblob, timeout, pStmt, i, nData);
+    }
+
+    SQLITE_API int sqlite3_bind_zeroblob64(
+        sqlite3_stmt* pStmt,
+        int i,
+        sqlite3_uint64 nData,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_zeroblob64, timeout, pStmt, i, nData);
+    }
+
+    SQLITE_API int sqlite3_bind_parameter_count(
+        sqlite3_stmt* pStmt,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_parameter_count, timeout, pStmt);
+    }
+
+    SQLITE_API const char* sqlite3_bind_parameter_name(
+        sqlite3_stmt* pStmt,
+        int i,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_parameter_name, timeout, pStmt, i);
+    }
+
+    SQLITE_API int sqlite3_bind_parameter_index(
+        sqlite3_stmt* pStmt,
+        const char* zName,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_bind_parameter_index, timeout, pStmt, zName);
+    }
+
+    SQLITE_API int sqlite3_clear_bindings(
+        sqlite3_stmt* pStmt,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_clear_bindings, timeout, pStmt);
+    }
+
+#ifdef SQLITE_ENABLE_COLUMN_METADATA
+    SQLITE_API const char* sqlite3_column_database_name(
+        sqlite3_stmt* pStmt,
+        int i,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_column_database_name, timeout, pStmt, i);
+    }
+
+    SQLITE_API const void* sqlite3_column_database_name16(
+        sqlite3_stmt* pStmt,
+        int i,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_column_database_name16, timeout, pStmt, i);
+    }
+
+    SQLITE_API const char* sqlite3_column_table_name(
+        sqlite3_stmt* pStmt,
+        int i,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_column_table_name, timeout, pStmt, i);
+    }
+
+    SQLITE_API const void* sqlite3_column_table_name16(
+        sqlite3_stmt* pStmt,
+        int i,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_column_table_name16, timeout, pStmt, i);
+    }
+
+    SQLITE_API const char* sqlite3_column_origin_name(
+        sqlite3_stmt* pStmt,
+        int i,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_column_origin_name, timeout, pStmt, i);
+    }
+
+    SQLITE_API const void* sqlite3_column_origin_name16(
+        sqlite3_stmt* pStmt,
+        int i,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_column_origin_name16, timeout, pStmt, i);
+    }
+#endif // SQLITE_ENABLE_COLUMN_METADATA
+
+    SQLITE_API const char* sqlite3_column_decltype(
+        sqlite3_stmt* pStmt,
+        int i,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_column_decltype, timeout, pStmt, i);
+    }
+
+    SQLITE_API const void* sqlite3_column_decltype16(
+        sqlite3_stmt* pStmt,
+        int i,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_column_decltype16, timeout, pStmt, i);
+    }
+
+    SQLITE_API void sqlite3_result_blob(
+        sqlite3_context* context,
+        const void* data,
+        int nData,
+        void(*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_blob, timeout, context, data, nData, xDel);
+    }
+
+    SQLITE_API void sqlite3_result_blob64(
+        sqlite3_context* context,
+        const void* data,
+        sqlite3_uint64 nData,
+        void(*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_blob64, timeout, context, data, nData, xDel);
+    }
+
+    SQLITE_API void sqlite3_result_double(
+        sqlite3_context* context,
+        double value,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_double, timeout, context, value);
+    }
+
+    SQLITE_API void sqlite3_result_error(
+        sqlite3_context* context,
+        const char* errorMsg,
+        int msgLength,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_error, timeout, context, errorMsg, msgLength);
+    }
+
+    SQLITE_API void sqlite3_result_error16(
+        sqlite3_context* context,
+        const void* errorMsg,
+        int msgLength,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_error16, timeout, context, errorMsg, msgLength);
+    }
+
+    SQLITE_API void sqlite3_result_error_toobig(
+        sqlite3_context* context,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_error_toobig, timeout, context);
+    }
+
+    SQLITE_API void sqlite3_result_error_nomem(
+        sqlite3_context* context,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_error_nomem, timeout, context);
+    }
+
+    SQLITE_API void sqlite3_result_error_code(
+        sqlite3_context* context,
+        int errorCode,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_error_code, timeout, context, errorCode);
+    }
+
+    SQLITE_API void sqlite3_result_int(
+        sqlite3_context* context,
+        int value,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_int, timeout, context, value);
+    }
+
+    SQLITE_API void sqlite3_result_int64(
+        sqlite3_context* context,
+        sqlite3_int64 value,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_int64, timeout, context, value);
+    }
+
+    SQLITE_API void sqlite3_result_null(
+        sqlite3_context* context,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_null, timeout, context);
+    }
+
+    SQLITE_API void sqlite3_result_text(
+        sqlite3_context* context,
+        const char* text,
+        int nText,
+        void(*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_text, timeout, context, text, nText, xDel);
+    }
+
+    SQLITE_API void sqlite3_result_text64(
+        sqlite3_context* context,
+        const char* text,
+        sqlite3_uint64 nText,
+        void(*xDel)(void*),
+        unsigned char encoding,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_text64, timeout, context, text, nText, xDel, encoding);
+    }
+
+    SQLITE_API void sqlite3_result_text16(
+        sqlite3_context* context,
+        const void* text,
+        int nText,
+        void(*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_text16, timeout, context, text, nText, xDel);
+    }
+
+    SQLITE_API void sqlite3_result_text16le(
+        sqlite3_context* context,
+        const void* text,
+        int nText,
+        void(*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_text16le, timeout, context, text, nText, xDel);
+    }
+
+    SQLITE_API void sqlite3_result_text16be(
+        sqlite3_context* context,
+        const void* text,
+        int nText,
+        void(*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_text16be, timeout, context, text, nText, xDel);
+    }
+
+    SQLITE_API void sqlite3_result_value(
+        sqlite3_context* context,
+        sqlite3_value* value,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_value, timeout, context, value);
+    }
+
+    SQLITE_API void sqlite3_result_pointer(
+        sqlite3_context* context,
+        void* pointer,
+        const char* type,
+        void(*xDel)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_pointer, timeout, context, pointer, type, xDel);
+    }
+
+    SQLITE_API void sqlite3_result_zeroblob(
+        sqlite3_context* context,
+        int n,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_zeroblob, timeout, context, n);
+    }
+
+    SQLITE_API int sqlite3_result_zeroblob64(
+        sqlite3_context* context,
+        sqlite3_uint64 n,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_result_zeroblob64, timeout, context, n);
+    }
+
+    SQLITE_API void sqlite3_result_subtype(
+        sqlite3_context* context,
+        unsigned int subtype,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_result_subtype, timeout, context, subtype);
+    }
+
+    SQLITE_API int sqlite3_create_collation(
+        sqlite3* db,
+        const char* zName,
+        int eTextRep,
+        void* pArg,
+        int(*xCompare)(void*, int, const void*, int, const void*),
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_create_collation, timeout, db, zName, eTextRep, pArg, xCompare);
+    }
+
+    SQLITE_API int sqlite3_create_collation_v2(
+        sqlite3* db,
+        const char* zName,
+        int eTextRep,
+        void* pArg,
+        int(*xCompare)(void*, int, const void*, int, const void*),
+        void(*xDestroy)(void*),
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_create_collation_v2, timeout, db, zName, eTextRep, pArg, xCompare, xDestroy);
+    }
+
+    SQLITE_API int sqlite3_create_collation16(
+        sqlite3* db,
+        const void* zName,
+        int eTextRep,
+        void* pArg,
+        int(*xCompare)(void*, int, const void*, int, const void*),
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_create_collation16, timeout, db, zName, eTextRep, pArg, xCompare);
+    }
+
+    SQLITE_API int sqlite3_collation_needed(
+        sqlite3* db,
+        void* pArg,
+        void(*xCollNeeded)(void*, sqlite3*, int eTextRep, const char*),
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_collation_needed, timeout, db, pArg, xCollNeeded);
+    }
+
+    SQLITE_API int sqlite3_collation_needed16(
+        sqlite3* db,
+        void* pArg,
+        void(*xCollNeeded)(void*, sqlite3*, int eTextRep, const void*),
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_collation_needed16, timeout, db, pArg, xCollNeeded);
+    }
+
+    SQLITE_API int sqlite3_sleep(
+        int milliseconds,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_sleep, timeout, milliseconds);
+    }
+
+    SQLITE_API sqlite3* sqlite3_db_handle(sqlite3_stmt* pStmt) {
+        // Thread safe already
+        return ::sqlite3_db_handle(pStmt);
+    }
+
+    SQLITE_API const char* sqlite3_db_name(sqlite3* db, int N) {
+        // Thread safe already
+        return ::sqlite3_db_name(db, N);
+    }
+
+    SQLITE_API sqlite3_filename sqlite3_db_filename(sqlite3* db, const char* zDbName) {
+        return ::sqlite3_db_filename(db, zDbName);
+    }
+
+    SQLITE_API int sqlite3_db_readonly(sqlite3* db, const char* zDbName) {
+        return ::sqlite3_db_readonly(db, zDbName);
+    }
+
+    SQLITE_API sqlite3_stmt* sqlite3_next_stmt(
+        sqlite3* pDb,
+        sqlite3_stmt* pStmt,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_next_stmt, timeout, pDb, pStmt);
+    }
+
+    SQLITE_API int sqlite3_release_memory(
+        int n,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_release_memory, timeout, n);
+    }
+
+    SQLITE_API int sqlite3_db_release_memory(
+        sqlite3* pDb,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_db_release_memory, timeout, pDb);
+    }
+
+    SQLITE_API int sqlite3_table_column_metadata(
+        sqlite3* db,
+        const char* zDbName,
+        const char* zTableName,
+        const char* zColumnName,
+        char const** pzDataType,
+        char const** pzCollSeq,
+        int* pNotNull,
+        int* pPrimaryKey,
+        int* pAutoinc,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_table_column_metadata, timeout, db, zDbName, zTableName, zColumnName, pzDataType, pzCollSeq, pNotNull, pPrimaryKey, pAutoinc);
+    }
+
+    SQLITE_API int sqlite3_load_extension(
+        sqlite3* db,
+        const char* zFile,
+        const char* zProc,
+        char** pzErrMsg,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_load_extension, timeout, db, zFile, zProc, pzErrMsg);
+    }
+
+    SQLITE_API int sqlite3_enable_load_extension(
+        sqlite3* db,
+        int onoff,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_enable_load_extension, timeout, db, onoff);
+    }
+
+    SQLITE_API sqlite3_str* sqlite3_str_new(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_str_new, timeout, db);
+    }
+
+    SQLITE_API char* sqlite3_str_finish(
+        sqlite3_str* pStr,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_str_finish, timeout, pStr);
+    }
+
+    SQLITE_API void sqlite3_str_append(
+        sqlite3_str* pStr,
+        const char* zIn,
+        int N,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_str_append, timeout, pStr, zIn, N);
+    }
+
+    SQLITE_API void sqlite3_str_appendall(
+        sqlite3_str* pStr,
+        const char* zIn,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_str_appendall, timeout, pStr, zIn);
+    }
+
+    SQLITE_API void sqlite3_str_appendchar(
+        sqlite3_str* pStr,
+        int N,
+        char C,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_str_appendchar, timeout, pStr, N, C);
+    }
+
+    SQLITE_API void sqlite3_str_reset(
+        sqlite3_str* pStr,
+        std::chrono::milliseconds timeout
+    ) {
+        AsyncInvoke(::sqlite3_str_reset, timeout, pStr);
+    }
+
+    SQLITE_API int sqlite3_str_errcode(
+        sqlite3_str* pStr,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_str_errcode, timeout, pStr);
+    }
+
+    SQLITE_API int sqlite3_str_length(
+        sqlite3_str* pStr,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_str_length, timeout, pStr);
+    }
+
+    SQLITE_API char* sqlite3_str_value(
+        sqlite3_str* pStr,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_str_value, timeout, pStr);
+    }
+
+    SQLITE_API int sqlite3_status(
+        int op,
+        int* pCurrent,
+        int* pHighwater,
+        int resetFlag,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_status, timeout, op, pCurrent, pHighwater, resetFlag);
+    }
+
+    SQLITE_API int sqlite3_status64(
+        int op,
+        sqlite3_int64* pCurrent,
+        sqlite3_int64* pHighwater,
+        int resetFlag,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_status64, timeout, op, pCurrent, pHighwater, resetFlag);
+    }
+
+    SQLITE_API int sqlite3_stmt_status(
+        sqlite3_stmt* pStmt,
+        int op,
+        int resetFlg,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_stmt_status, timeout, pStmt, op, resetFlg);
+    }
+
+    SQLITE_API sqlite3_backup* sqlite3_backup_init(
+        sqlite3* pDest,
+        const char* zDestName,
+        sqlite3* pSource,
+        const char* zSourceName,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_backup_init, timeout, pDest, zDestName, pSource, zSourceName);
+    }
+
+    SQLITE_API int sqlite3_backup_step(
+        sqlite3_backup* p,
+        int nPage,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_backup_step, timeout, p, nPage);
+    }
+
+    SQLITE_API int sqlite3_backup_finish(
+        sqlite3_backup* p,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_backup_finish, timeout, p);
+    }
+
+    SQLITE_API int sqlite3_backup_remaining(
+        sqlite3_backup* p,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_backup_remaining, timeout, p);
+    }
+
+    SQLITE_API int sqlite3_backup_pagecount(
+        sqlite3_backup* p,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_backup_pagecount, timeout, p);
+    }
+
+#ifdef SQLITE_ENABLE_UNLOCK_NOTIFY
+    SQLITE_API int sqlite3_unlock_notify(
+        sqlite3* pBlocked,
+        void (*xNotify)(void** apArg, int nArg),
+        void* pNotifyArg,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_unlock_notify, timeout, pBlocked, xNotify, pNotifyArg);
+    }
+#endif
+
+    SQLITE_API int sqlite3_stricmp(
+        const char* z1,
+        const char* z2,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_stricmp, timeout, z1, z2);
+    }
+
+    SQLITE_API int sqlite3_strnicmp(
+        const char* z1,
+        const char* z2,
+        int N,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_strnicmp, timeout, z1, z2, N);
+    }
+
+    SQLITE_API int sqlite3_strglob(
+        const char* zGlob,
+        const char* zStr,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_strglob, timeout, zGlob, zStr);
+    }
+
+    SQLITE_API int sqlite3_strlike(
+        const char* zGlob,
+        const char* zStr,
+        unsigned int cEsc,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_strlike, timeout, zGlob, zStr, cEsc);
+    }
+
+    SQLITE_API int sqlite3_wal_autocheckpoint(
+        sqlite3* db,
+        int N,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_wal_autocheckpoint, timeout, db, N);
+    }
+
+    SQLITE_API int sqlite3_wal_checkpoint(
+        sqlite3* db,
+        const char* zDb,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_wal_checkpoint, timeout, db, zDb);
+    }
+
+    SQLITE_API int sqlite3_wal_checkpoint_v2(
+        sqlite3* db,
+        const char* zDb,
+        int eMode,
+        int* pnLog,
+        int* pnCkpt,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_wal_checkpoint_v2, timeout, db, zDb, eMode, pnLog, pnCkpt);
+    }
+
+    SQLITE_API int sqlite3_db_cacheflush(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_db_cacheflush, timeout, db);
+    }
+
+    SQLITE_API int sqlite3_system_errno(
+        sqlite3* db,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_system_errno, timeout, db);
+    }
+
+    SQLITE_API unsigned char* sqlite3_serialize(
+        sqlite3* db,
+        const char* zSchema,
+        sqlite3_int64* piSize,
+        unsigned int mFlags,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_serialize, timeout, db, zSchema, piSize, mFlags);
+    }
+
+    SQLITE_API int sqlite3_deserialize(
+        sqlite3* db,
+        const char* zSchema,
+        unsigned char* pData,
+        sqlite3_int64 szDb,
+        sqlite3_int64 szBuf,
+        unsigned mFlags,
+        std::chrono::milliseconds timeout
+    ) {
+        return AsyncInvoke(::sqlite3_deserialize, timeout, db, zSchema, pData, szDb, szBuf, mFlags);
     }
 
 }  // namespace async
