@@ -363,6 +363,8 @@ int RunUnitTests()
     testSqlite3ColumnTextAsync();
     testSqliteMemoryFunctionsAsync();
 
+    // TODO: Add more tests. Use existing SQLite tests?
+
     std::cout << "All tests passed!" << std::endl;
     return 0;
 }

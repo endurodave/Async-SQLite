@@ -1,13 +1,23 @@
+// Asynchronous SQLite wrapper using C++ Delegates
+// @see https://github.com/endurodave/Async-SQLite
+// @see https://github.com/endurodave/AsyncMulticastDelegateModern
+// David Lafreniere, Nov 2024
+
+// An asynchronous SQLite API that invokes all calls on an internal thread of control.
+// All API functions are thread-safe and can be called from any thread. Optionally, 
+// you can add the timeout argument to any API function to specify a maximum wait time.
+// This will block the calling thread for up to the specified timeout while waiting 
+// for the database worker thread to complete the requested function call. If the wait 
+// time expires, SQLITE_ERROR is returned, and the function is not called.
+//
+// Call sqlite3_init_async() once at startup before any other API.
+
 #ifndef ASYNC_SQLITE3_H
 #define ASYNC_SQLITE3_H
 
 #include "sqlite3.h"
 #include <chrono>
 #include "DelegateThread.h"
-
-// Asynchronous SQLite API that to invoke from a single thread of control.
-// All API functions are thread-safe and can be called from any thread of control.
-// Optionally add the timeout argument to any API for a maximum wait time.
 
 namespace async
 {
@@ -513,4 +523,4 @@ namespace async
         std::chrono::milliseconds timeout = MAX_WAIT);
 } // namespace async
 
-#endif
+#endif // ASYNC_SQLITE3_H

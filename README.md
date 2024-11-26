@@ -131,7 +131,7 @@ namespace async
         std::chrono::milliseconds timeout = MAX_WAIT
     );
 
-    // TODO: Add more sqlite async API's as necessary
+    // etc...
 }
 ```
 
@@ -182,7 +182,7 @@ SQLITE_API int async::sqlite3_close(
     return retVal;
 }
 
-// TODO: Add more sqlite async API's as necessary
+// etc...
 ```
 
 The `AsyncInvoke()` helper function invokes the function asynchronously if the caller is not executing on the `SQLiteThread` thread. Otherwise, if the caller is already on the internal thread the target function is called synchronously.

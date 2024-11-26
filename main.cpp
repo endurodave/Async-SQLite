@@ -1,11 +1,7 @@
-// @see https://github.com/endurodave/Async-SQLite
-// David Lafreniere, Nov 2024.
-//
 // Asynchronous SQLite wrapper using a C++ delegate library. 
-
-// TODO:
-// Update this file header
-// Update modern delegate article, async wait still invokes even if timeout expires
+// @see https://github.com/endurodave/Async-SQLite
+// @see https://github.com/endurodave/AsyncMulticastDelegateModern
+// David Lafreniere, Nov 2024.
 
 #include "DelegateLib.h"
 #include "WorkerThreadStd.h"
