@@ -1,10 +1,10 @@
 # Example CMake command line to create project build files:
 #
 # *** Windows ***
-# cmake -G "Visual Studio 17 2022" -A Win32 -B ../Async-SQLiteBuild -S .
+# cmake -G "Visual Studio 17 2022" -A Win32 -B Build -S .
 #
 # *** Linux ***
-# cmake -G "Unix Makefiles" -B ../Async-SQLiteBuild -S .
+# cmake -G "Unix Makefiles" -B Build -S .
 
 # Specify the minimum CMake version required
 cmake_minimum_required(VERSION 3.10)
@@ -18,6 +18,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Collect all .cpp and *.h source files in the current directory
 file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/*.cpp" "${CMAKE_SOURCE_DIR}/*.h")
+
+# Collect all header files in the Delegate directory
+file(GLOB Delegate_HEADERS "${CMAKE_SOURCE_DIR}/Delegate/*.h")
+
+# Organize Delegate headers into a "Delegate Files" folder in Visual Studio
+source_group("Delegate Files" FILES ${Delegate_HEADERS})
 
 # Add subdirectories to include path
 include_directories( 
@@ -33,14 +39,13 @@ include_directories(
 endif()
 
 # Add an executable target
-add_executable(Async-SQLiteApp ${SOURCES})
+add_executable(Async-SQLiteApp ${SOURCES} ${Delegate_HEADERS})
 
 if (ENABLE_ALLOCATOR)
     add_compile_definitions(USE_ALLOCATOR)
 endif()
 
 # Add subdirectories to build
-add_subdirectory(Delegate)
 add_subdirectory(SQLite)
 add_subdirectory(Port)
 
@@ -49,7 +54,6 @@ if (ENABLE_ALLOCATOR)
 endif()
 
 target_link_libraries(Async-SQLiteApp PRIVATE 
-    DelegateLib
     SQLiteLib
     PortLib
 )

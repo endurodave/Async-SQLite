@@ -11,6 +11,5 @@ add_library(SQLiteLib STATIC ${SUBDIR_SOURCES} ${SUBDIR_HEADERS})
 target_include_directories(SQLiteLib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(SQLiteLib LINK_PUBLIC 
-    DelegateLib
     PortLib
 )

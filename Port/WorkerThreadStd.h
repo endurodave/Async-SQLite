@@ -18,7 +18,7 @@ class WorkerThread : public DelegateLib::DelegateThread
 {
 public:
 	/// Constructor
-	WorkerThread(const char* threadName);
+	WorkerThread(const std::string& threadName);
 
 	/// Destructor
 	~WorkerThread();
@@ -39,7 +39,10 @@ public:
 	/// Get thread name
 	std::string GetThreadName() { return THREAD_NAME; }
 
-	virtual void DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsgBase> msg);
+	/// Get size of thread message queue.
+	size_t GetQueueSize();
+
+	virtual void DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsg> msg);
 
 private:
 	WorkerThread(const WorkerThread&) = delete;

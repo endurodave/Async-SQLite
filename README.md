@@ -1,3 +1,8 @@
+![License MIT](https://img.shields.io/github/license/BehaviorTree/BehaviorTree.CPP?color=blue)
+[![conan Ubuntu](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_ubuntu.yml/badge.svg)](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_ubuntu.yml)
+[![conan Ubuntu](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_clang.yml/badge.svg)](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_clang.yml)
+[![conan Windows](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_windows.yml/badge.svg)](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_windows.yml)
+
 # Asynchronous SQLite API using C++ Delegates
 
 An asynchronous SQLite API wrapper implemented using a C++ delegate libraries. All target platforms are supported including Windows, Linux, and embedded systems.
@@ -30,7 +35,7 @@ The purpose of the wrapper is twofold: First, to provide a simple asynchronous l
 
 # References
 
-* <a href="https://github.com/endurodave/AsyncMulticastDelegateModern">Asynchronous Multicast Delegates in Modern C++</a> - A C++ standards compliant delegate library capable of targeting any callable function synchronously or asynchronously.
+* <a href="https://github.com/endurodave/cpp-async-delegate">Asynchronous Multicast Delegates in Modern C++</a> - A C++ standards compliant delegate library capable of targeting any callable function synchronously or asynchronously.
 *  <a href="https://github.com/endurodave/StdWorkerThread">C++ std::thread Event Loop with Message Queue and Timer</a> - Create a worker thread with an event loop, message queue and a timer using the C++11 thread support library.
 * <a href="https://www.sqlite.org/">SQLite</a> - SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
 
