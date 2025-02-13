@@ -3,8 +3,7 @@
 // @see https://github.com/endurodave/AsyncMulticastDelegateModern
 // David Lafreniere, Nov 2024.
 
-#include "DelegateLib.h"
-#include "WorkerThreadStd.h"
+#include "DelegateMQ.h"
 #include <stdio.h>
 #include <sqlite3.h>
 #include <string>
@@ -13,15 +12,15 @@
 #include "async_sqlite3_ut.h"
 
 using namespace std;
-using namespace DelegateLib;
+using namespace dmq;
 
 // Worker thread instances
-WorkerThread workerThreads[] = {
+Thread workerThreads[] = {
     { "WorkerThread1" },
     { "WorkerThread2" } 
 };
 
-WorkerThread nonBlockingAsyncThread("NonBlockingAsyncThread");
+Thread nonBlockingAsyncThread("NonBlockingAsyncThread");
 
 static const int WORKER_THREAD_CNT = sizeof(workerThreads) / sizeof(workerThreads[0]);
 
@@ -256,10 +255,10 @@ void example1()
 void example2()
 {
     // Get the internal SQLite async interface thread
-    DelegateLib::DelegateThread* sqlThread = async::sqlite3_get_thread();
+    Thread* sqlThread = async::sqlite3_get_thread();
 
     // Create an asynchronous blocking delegate to invoke async_sqlite_simple_example()
-    auto delegate = DelegateLib::MakeDelegate(&async_sqlite_simple_example, *sqlThread, async::MAX_WAIT);
+    auto delegate = MakeDelegate(&async_sqlite_simple_example, *sqlThread, async::MAX_WAIT);
 
     // Invoke async_sqlite_simple_example() on sqlThread and wait for the retVal
     auto retVal = delegate.AsyncInvoke();
@@ -304,7 +303,7 @@ std::chrono::microseconds example4()
     auto nonBlockingStart = std::chrono::high_resolution_clock::now();
 
     // Create a delegate to execute on nonBlockingAsyncThread without waiting for completion
-    auto noWaitDelegate = DelegateLib::MakeDelegate(&async_mutithread_example, nonBlockingAsyncThread);
+    auto noWaitDelegate = MakeDelegate(&async_mutithread_example, nonBlockingAsyncThread);
 
     // Call async_mutithread_example() on nonBlockingAsyncThread and don't wait for it to complete
     noWaitDelegate.AsyncInvoke();

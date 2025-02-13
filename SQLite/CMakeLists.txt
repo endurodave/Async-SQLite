@@ -10,6 +10,7 @@ add_library(SQLiteLib STATIC ${SUBDIR_SOURCES} ${SUBDIR_HEADERS})
 # Include directories for the library
 target_include_directories(SQLiteLib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_link_libraries(SQLiteLib LINK_PUBLIC 
-    PortLib
-)
+# Add /bigobj flag for MSVC 
+if (MSVC)
+    target_compile_options(SQLiteLib PRIVATE /bigobj)
+endif()

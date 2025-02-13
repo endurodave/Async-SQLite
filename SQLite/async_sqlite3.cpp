@@ -4,15 +4,14 @@
 // David Lafreniere, Nov 2024
 
 #include "async_sqlite3.h"
-#include "DelegateLib.h"
-#include "WorkerThreadStd.h"
+#include "DelegateMQ.h"
 
-using namespace DelegateLib;
+using namespace dmq;
 
 namespace async
 {
     // A private worker thread instance to execute all SQLite API functions
-    static WorkerThread SQLiteThread("SQLite Thread");
+    static Thread SQLiteThread("SQLite Thread");
 
     /// Helper function to simplify asynchronous function calling on SQLiteThread
     /// @param[in] func - a function to invoke
@@ -25,10 +24,10 @@ namespace async
         using RetType = decltype(func(std::forward<Args>(args)...));
 
         // Is the calling function executing on the SQLiteThread thread?
-        if (SQLiteThread.GetThreadId() != WorkerThread::GetCurrentThreadId())
+        if (SQLiteThread.GetThreadId() != Thread::GetCurrentThreadId())
         {
             // Create a delegate that points to func and is invoked on SQLiteThread
-            auto delegate = DelegateLib::MakeDelegate(func, SQLiteThread, timeout);
+            auto delegate = MakeDelegate(func, SQLiteThread, timeout);
 
             // Invoke the delegate target function asynchronously and wait for function call to complete
             auto retVal = delegate.AsyncInvoke(std::forward<Args>(args)...);
@@ -55,7 +54,8 @@ namespace async
             // Invoke target function synchronously since we're already executing on SQLiteThread
             if constexpr (std::is_void_v<RetType>)
             {
-                func(std::forward<Args>(args)...); // Synchronous call
+                //func(std::forward<Args>(args)...); // Synchronous call
+                std::invoke(func, std::forward<Args>(args)...);
                 return RetType(); // No return value for void
             }
             else
@@ -72,7 +72,7 @@ namespace async
         SQLiteThread.CreateThread();
     }
 
-    DelegateLib::DelegateThread* sqlite3_get_thread(void)
+    Thread* sqlite3_get_thread(void)
     {
         return &SQLiteThread;
     }

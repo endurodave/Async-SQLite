@@ -14,8 +14,6 @@ An asynchronous SQLite API wrapper implemented using a C++ delegate libraries. A
 - [Overview](#overview)
 - [References](#references)
 - [Project Build](#project-build)
-  - [Windows Visual Studio](#windows-visual-studio)
-  - [Linux Make](#linux-make)
 - [Delegate Quick Start](#delegate-quick-start)
 - [Why Asynchronous SQLite](#why-asynchronous-sqlite)
 - [Asynchronous SQLite](#asynchronous-sqlite)
@@ -35,34 +33,23 @@ The purpose of the wrapper is twofold: First, to provide a simple asynchronous l
 
 # References
 
-* <a href="https://github.com/endurodave/cpp-async-delegate">Asynchronous Multicast Delegates in Modern C++</a> - A C++ standards compliant delegate library capable of targeting any callable function synchronously or asynchronously.
-*  <a href="https://github.com/endurodave/StdWorkerThread">C++ std::thread Event Loop with Message Queue and Timer</a> - Create a worker thread with an event loop, message queue and a timer using the C++11 thread support library.
+* <a href="https://github.com/endurodave/DelegateMQ">DelegatesMQ</a> - Invoke any C++ callable function synchronously, asynchronously, or on a remote endpoint.
 * <a href="https://www.sqlite.org/">SQLite</a> - SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
 
 # Project Build
 
 <a href="https://www.cmake.org">CMake</a> is used to create the build files. CMake is free and open-source software. Windows, Linux and other toolchains are supported. Example CMake console commands executed inside the project root directory: 
 
-## Windows Visual Studio
-
-<code>cmake -G "Visual Studio 17 2022" -A Win32 -B ../Async-SQLiteBuild -S .</code>
-
-After executed, open the Visual Studio project from within the <code>Async-SQLiteBuild</code> directory.
-
-## Linux Make
-
-<code>cmake -G "Unix Makefiles" -B ../Async-SQLiteBuild -S .</code>
-
-After executed, build the software from within the Async-SQLiteBuild directory using the command <code>make</code>. Run the console app using <code>./Async-SQLiteApp</code>.
+<code>cmake -B Build -S .</code>
 
 # Delegate Quick Start
 
-The DelegateLib contains delegates and delegate containers. The example below creates a delegate with the target function `MyTestFunc()`. The first example is a synchronously delegate function call, and the second example asynchronously. Notice the only difference is adding a thread instance `myThread` argument. See [Delegate Library](https://github.com/endurodave/AsyncMulticastDelegateModern) repository for more details.
+The DelegateMQ contains delegates and delegate containers. The example below creates a delegate with the target function `MyTestFunc()`. The first example is a synchronously delegate function call, and the second example asynchronously. Notice the only difference is adding a thread instance `myThread` argument. See [Delegate Library](https://github.com/endurodave/AsyncMulticastDelegateModern) repository for more details.
 
 ```cpp
-#include "DelegateLib.h"
+#include "DelegateMQ.h"
 
-using namespace DelegateLib;
+using namespace DelegateMQ;
 
 void MyTestFunc(int val)
 {
@@ -114,7 +101,7 @@ namespace async
     void sqlite3_init_async(void);
 
     // Get a pointer to the internal thread
-    DelegateLib::DelegateThread* sqlite3_get_thread(void);
+    Thread* sqlite3_get_thread(void);
 
     SQLITE_API int sqlite3_open(
         const char* filename,   /* Database filename (UTF-8) */
@@ -149,7 +136,7 @@ void async::sqlite3_init_async(void)
     SQLiteThread.CreateThread();
 }
 
-DelegateLib::DelegateThread* async::sqlite3_get_thread(void)
+Thread* async::sqlite3_get_thread(void)
 {
     return &SQLiteThread;
 }
@@ -194,7 +181,7 @@ The `AsyncInvoke()` helper function invokes the function asynchronously if the c
 
 ```cpp
 // A private worker thread instance to execute all SQLite API functions
-static WorkerThread SQLiteThread("SQLite Thread");
+static Thread SQLiteThread("SQLite Thread");
 
 /// Helper function to simplify asynchronous function calling on SQLiteThread
 /// @param[in] func - a function to invoke
@@ -207,10 +194,10 @@ auto AsyncInvoke(Func func, Timeout timeout, Args&&... args)
     using RetType = decltype(func(std::forward<Args>(args)...));
 
     // Is the calling function executing on the SQLiteThread thread?
-    if (SQLiteThread.GetThreadId() != WorkerThread::GetCurrentThreadId())
+    if (SQLiteThread.GetThreadId() != Thread::GetCurrentThreadId())
     {
         // Create a delegate that points to func and is invoked on SQLiteThread
-        auto delegate = DelegateLib::MakeDelegate(func, SQLiteThread, timeout);
+        auto delegate = MakeDelegate(func, SQLiteThread, timeout);
 
         // Invoke the delegate target function asynchronously and wait for function call to complete
         auto retVal = delegate.AsyncInvoke(std::forward<Args>(args)...);
@@ -380,10 +367,10 @@ The previous example generated one queue message per `async` API call. Alternati
 
 ```cpp
 // Get the internal SQLite async interface thread
-DelegateLib::DelegateThread* sqlThread = async::sqlite3_get_thread();
+Thread* sqlThread = async::sqlite3_get_thread();
 
 // Create an asynchronous blocking delegate to invoke async_sqlite_simple_example()
-auto delegate = DelegateLib::MakeDelegate(&async_sqlite_simple_example, *sqlThread, async::MAX_WAIT);
+auto delegate = dmq::MakeDelegate(&async_sqlite_simple_example, *sqlThread, async::MAX_WAIT);
 
 // Invoke async_sqlite_simple_example() on sqlThread and wait for the retVal
 auto retVal = delegate.AsyncInvoke();
@@ -566,7 +553,7 @@ std::chrono::microseconds example4()
     auto nonBlockingStart = std::chrono::high_resolution_clock::now();
 
     // Create a delegate to execute on nonBlockingAsyncThread without waiting for completion
-    auto noWaitDelegate = DelegateLib::MakeDelegate(&async_mutithread_example, nonBlockingAsyncThread);
+    auto noWaitDelegate = dmq::MakeDelegate(&async_mutithread_example, nonBlockingAsyncThread);
 
     // Call async_mutithread_example() on nonBlockingAsyncThread and don't wait for it to complete
     noWaitDelegate.AsyncInvoke();

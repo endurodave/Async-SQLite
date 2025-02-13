@@ -17,7 +17,7 @@
 
 #include "sqlite3.h"
 #include <chrono>
-#include "DelegateThread.h"
+#include "DelegateMQ.h"
 
 namespace async
 {
@@ -28,7 +28,7 @@ namespace async
     void sqlite3_init_async(void);
 
     // Get a pointer to the internal thread
-    DelegateLib::DelegateThread* sqlite3_get_thread(void);
+    Thread* sqlite3_get_thread(void);
 
     SQLITE_API int sqlite3_trace_v2(
         sqlite3*,
