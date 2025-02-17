@@ -32,6 +32,17 @@ static sqlite3* db_multithread = nullptr;
 static MulticastDelegateSafe<void(int)> completeCallback;
 static std::atomic<bool> completeFlag = false;
 
+std::atomic<bool> processTimerExit = false;
+static void ProcessTimers()
+{
+    while (!processTimerExit.load())
+    {
+        // Process all delegate-based timers
+        Timer::ProcessTimers();
+        std::this_thread::sleep_for(std::chrono::microseconds(50));
+    }
+}
+
 // Thread safe printf function that locks the mutex
 void printf_safe(const char* format, ...) 
 {
@@ -319,6 +330,9 @@ std::chrono::microseconds example4()
 //------------------------------------------------------------------------------
 int main(void)
 {
+    // Start the thread that will run ProcessTimers
+    std::thread timerThread(ProcessTimers);
+
     std::remove("async_multithread_example.db");
     std::remove("async_sqlite_simple_example.db");
 
@@ -353,6 +367,11 @@ int main(void)
     // Compare blocking and non-blocking execution times
     std::cout << "Blocking Time: " << blockingDuration.count() << " microseconds." << std::endl;
     std::cout << "Non-Blocking Time: " << nonBlockingDuration.count() << " microseconds." << std::endl;
+
+    // Ensure the timer thread completes before main exits
+    processTimerExit.store(true);
+    if (timerThread.joinable())
+        timerThread.join();
 
     return 0;
 }
