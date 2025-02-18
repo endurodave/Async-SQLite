@@ -44,7 +44,7 @@ The purpose of the wrapper is twofold: First, to provide a simple asynchronous l
 
 # Delegate Quick Start
 
-The DelegateMQ contains delegates and delegate containers. The example below creates a delegate with the target function `MyTestFunc()`. The first example is a synchronously delegate function call, and the second example asynchronously. Notice the only difference is adding a thread instance `myThread` argument. See [Delegate Library](https://github.com/endurodave/AsyncMulticastDelegateModern) repository for more details.
+The DelegateMQ contains delegates and delegate containers. The example below creates a delegate with the target function `MyTestFunc()`. The first example is a synchronously delegate function call, and the second example asynchronously. Notice the only difference is adding a thread instance `myThread` argument. See [DelegateMQ](https://github.com/endurodave/DelegateMQ) repository for more details.
 
 ```cpp
 #include "DelegateMQ.h"
