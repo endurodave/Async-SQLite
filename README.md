@@ -13,7 +13,7 @@ An asynchronous SQLite API wrapper implemented using a C++ delegate libraries. A
 - [Table of Contents](#table-of-contents)
 - [Overview](#overview)
 - [References](#references)
-- [Project Build](#project-build)
+- [Getting Started](#getting-started)
 - [Delegate Quick Start](#delegate-quick-start)
 - [Why Asynchronous SQLite](#why-asynchronous-sqlite)
 - [Asynchronous SQLite](#asynchronous-sqlite)
@@ -36,11 +36,13 @@ The purpose of the wrapper is twofold: First, to provide a simple asynchronous l
 * <a href="https://github.com/endurodave/DelegateMQ">DelegatesMQ</a> - Invoke any C++ callable function synchronously, asynchronously, or on a remote endpoint.
 * <a href="https://www.sqlite.org/">SQLite</a> - SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
 
-# Project Build
+# Getting Started
+[CMake](https://cmake.org/) is used to create the project build files on any Windows or Linux machine.
 
-<a href="https://www.cmake.org">CMake</a> is used to create the build files. CMake is free and open-source software. Windows, Linux and other toolchains are supported. Example CMake console commands executed inside the project root directory: 
-
-<code>cmake -B Build -S .</code>
+1. Clone the repository.
+2. From the repository root, run the following CMake command:   
+   `cmake -B Build .`
+3. Build and run the project within the `Build` directory. 
 
 # Delegate Quick Start
 
