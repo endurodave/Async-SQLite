@@ -22,7 +22,7 @@
 namespace async
 {
     #undef max  // Prevent compiler error on next line if max is defined
-    constexpr auto MAX_WAIT = std::chrono::milliseconds::max();
+    constexpr auto MAX_WAIT = std::chrono::hours(1000);
 
     // Call one-time at application startup
     void sqlite3_init_async(void);
