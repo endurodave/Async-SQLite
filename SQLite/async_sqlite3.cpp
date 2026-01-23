@@ -113,10 +113,22 @@ namespace async
         return SQLITE_OK;
     }
 
+    /// Registers a trace callback function.
+    ///
+    /// @warning **Callback Thread Context**: The `xCallback` function is invoked on the 
+    ///          **private worker thread**, NOT the calling thread. 
+    ///          - Ensure strictly thread-safe access to any shared data inside the callback.
+    ///          - Do NOT attempt to update UI elements directly from this callback.
     SQLITE_API int sqlite3_trace_v2(sqlite3* db, unsigned mTrace, int(*xCallback)(unsigned, void*, void*, void*), void* pCtx, dmq::Duration timeout) {
         return AsyncInvoke(::sqlite3_trace_v2, timeout, db, mTrace, xCallback, pCtx);
     }
 
+    /// Registers a progress handler callback.
+    ///
+    /// @warning **Callback Thread Context**: The `xProgress` function is invoked on the 
+    ///          **private worker thread** during long-running queries.
+    ///          - Do NOT access thread-local storage of the main thread.
+    ///          - Keep operations fast to avoid stalling the database worker.
     SQLITE_API void sqlite3_progress_handler(sqlite3* db, int nOps, int(*xProgress)(void*), void* pArg, dmq::Duration timeout) {
         AsyncInvoke(::sqlite3_progress_handler, timeout, db, nOps, xProgress, pArg);
     }
@@ -269,6 +281,23 @@ namespace async
         return AsyncInvoke(::sqlite3_column_name16, timeout, pStmt, N);
     }
 
+    /// Executes SQL on the dedicated worker thread and blocks the calling thread until completion.
+    ///
+    /// @note **Blocking Behavior**: This function posts the task to the worker thread and 
+    ///       waits (sleeps) until the task completes or the timeout expires.
+    ///
+    /// @warning **Callback Thread Context**: The `callback` function is invoked on the 
+    ///          **private worker thread**, NOT the calling thread. 
+    ///          - Ensure strictly thread-safe access to any shared data inside the callback.
+    ///          - Do NOT attempt to update UI elements directly from the callback.
+    ///
+    /// @param[in]  db       Database handle.
+    /// @param[in]  sql      SQL script to be evaluated.
+    /// @param[in]  callback Callback function invoked for each result row (runs on worker thread).
+    /// @param[in]  pArg     1st argument to callback function.
+    /// @param[out] errMsg   Error msg written here.
+    /// @param[in]  timeout  Maximum duration to wait for completion. Returns SQLITE_BUSY if expired.
+    /// @return SQLite result code (e.g., SQLITE_OK) or SQLITE_BUSY on timeout.
     SQLITE_API int sqlite3_exec(sqlite3* db, const char* sql, sqlite3_callback callback, void* pArg, char** errMsg, dmq::Duration timeout) {
         return AsyncInvoke(::sqlite3_exec, timeout, db, sql, callback, pArg, errMsg);
     }
@@ -433,6 +462,11 @@ namespace async
         return AsyncInvoke(::sqlite3_randomness, timeout, N, P);
     }
 
+    /// Registers an authorizer callback.
+    ///
+    /// @warning **Callback Thread Context**: The `xAuth` function is invoked on the 
+    ///          **private worker thread** when a SQL statement is being compiled.
+    ///          - Ensure strictly thread-safe access if `pUserData` points to shared state.
     SQLITE_API int sqlite3_set_authorizer(sqlite3* db, int (*xAuth)(void*, int, const char*, const char*, const char*, const char*), void* pArg, dmq::Duration timeout) {
         return AsyncInvoke(::sqlite3_set_authorizer, timeout, db, xAuth, pArg);
     }
@@ -453,6 +487,12 @@ namespace async
         return AsyncInvoke(::sqlite3_busy_handler, timeout, db, xBusy, pArg);
     }
 
+    /// Binds a blob to a prepared statement.
+    ///
+    /// @warning **Buffer Safety**: If passing `SQLITE_STATIC` as the destructor (`xDel`), 
+    ///          you promise that `zData` will not change or be deleted until the statement is finalized.
+    ///          In a multi-threaded app, use `SQLITE_TRANSIENT` to force SQLite to make its own copy 
+    ///          immediately, preventing race conditions if the caller modifies the buffer later.
     SQLITE_API int sqlite3_bind_blob(sqlite3_stmt* pStmt, int i, const void* zData, int nData, void (*xDel)(void*), dmq::Duration timeout) {
         return AsyncInvoke(::sqlite3_bind_blob, timeout, pStmt, i, zData, nData, xDel);
     }
@@ -477,6 +517,12 @@ namespace async
         return AsyncInvoke(::sqlite3_bind_null, timeout, pStmt, i);
     }
 
+    /// Binds text to a prepared statement.
+    ///
+    /// @warning **Buffer Safety**: If passing `SQLITE_STATIC` as the destructor (`xDel`), 
+    ///          you promise that `zData` will not change or be deleted until the statement is finalized.
+    ///          In a multi-threaded app, use `SQLITE_TRANSIENT` to force SQLite to make its own copy 
+    ///          immediately, preventing race conditions if the caller modifies the string later.
     SQLITE_API int sqlite3_bind_text(sqlite3_stmt* pStmt, int i, const char* zData, int nData, void (*xDel)(void*), dmq::Duration timeout) {
         return AsyncInvoke(::sqlite3_bind_text, timeout, pStmt, i, zData, nData, xDel);
     }
@@ -821,6 +867,26 @@ namespace async
         return AsyncInvoke(::sqlite3_deserialize, timeout, db, zSchema, pData, szDb, szBuf, mFlags);
     }
 
+    /// Asynchronously executes SQL on the dedicated worker thread (Non-Blocking).
+    ///
+    /// @note **Fire-and-Forget**: This function returns immediately. The main thread continues 
+    ///       execution while the SQL query runs in the background.
+    ///
+    /// @warning **LIFETIME SAFETY WARNING**: 
+    ///          Because execution is deferred, you must ensure that **ALL pointers passed as arguments**
+    ///          (`sql`, `pArg`, `errMsg`) point to memory that remains valid until the operation completes.
+    ///          - **BAD:** Passing a pointer to a local stack variable that goes out of scope.
+    ///          - **GOOD:** Passing string literals, global variables, or heap-allocated objects managed by shared_ptr.
+    ///
+    /// @warning **Callback Thread Context**: The `callback` function is invoked on the 
+    ///          **private worker thread**, NOT the calling thread. 
+    ///
+    /// @param[in]  db       Database handle.
+    /// @param[in]  sql      SQL script to be evaluated. Must remain valid until execution completes.
+    /// @param[in]  callback Callback function invoked for each result row (runs on worker thread).
+    /// @param[in]  pArg     1st argument to callback function. Must remain valid until execution completes.
+    /// @param[out] errMsg   Pointer to a char* where error message is written. The location must remain valid.
+    /// @return std::future<int> A future that resolves to the SQLite result code (e.g., SQLITE_OK).
     std::future<int> sqlite3_exec_future(sqlite3* db, const char* sql, sqlite3_callback callback, void* pArg, char** errMsg) {
         return AsyncInvokeFuture(::sqlite3_exec, db, sql, callback, pArg, errMsg);
     }
@@ -845,10 +911,23 @@ namespace async
         return AsyncInvokeFuture(::sqlite3_backup_step, p, nPage);
     }
 
+    /// Asynchronously serializes the database content.
+    ///
+    /// @warning **LIFETIME SAFETY WARNING**: 
+    ///          This function returns immediately, but the worker thread accesses the arguments later.
+    ///          - `zSchema` MUST point to a string that remains valid until the future completes.
+    ///          - `piSize` MUST point to a valid integer location until the future completes.
+    ///          - **Do NOT pass pointers to local stack variables.**
     std::future<unsigned char*> sqlite3_serialize_future(sqlite3* db, const char* zSchema, sqlite3_int64* piSize, unsigned int mFlags) {
         return AsyncInvokeFuture(::sqlite3_serialize, db, zSchema, piSize, mFlags);
     }
 
+    /// Asynchronously deserializes a buffer into an in-memory database.
+    ///
+    /// @warning **LIFETIME SAFETY WARNING**: 
+    ///          This function returns immediately, but the worker thread accesses the arguments later.
+    ///          - `zSchema` and `pData` MUST remain valid pointers until the future completes.
+    ///          - If you allocated `pData`, do not `free()` it until you have checked the future result.
     std::future<int> sqlite3_deserialize_future(sqlite3* db, const char* zSchema, unsigned char* pData, sqlite3_int64 szDb, sqlite3_int64 szBuf, unsigned mFlags) {
         return AsyncInvokeFuture(::sqlite3_deserialize, db, zSchema, pData, szDb, szBuf, mFlags);
     }
