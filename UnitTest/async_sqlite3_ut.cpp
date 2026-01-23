@@ -352,8 +352,23 @@ void testSqliteMemoryFunctionsAsync() {
     std::cout << "Test sqlite3 memory functions async passed!" << std::endl;
 }
 
+extern void Initialization_UT();
+extern void Execution_UT();
+extern void Prepared_UT();
+extern void DataExchange_UT();
+extern void Transaction_UT();
+extern void ErrorHandling_UT();
+extern void Memory_UT();
+extern void Advanced_UT();
+extern void Stress_UT();
+extern void Future_UT();
+
 int RunUnitTests()
 {
+    std::cout << "========================================" << std::endl;
+    std::cout << "   STARTING ASYNC-SQLITE TEST SUITE     " << std::endl;
+    std::cout << "========================================" << std::endl;
+
     testSqliteOpenAsync();
     testSqliteExecAsync();
     testSqliteColumnTextAsync();
@@ -363,8 +378,19 @@ int RunUnitTests()
     testSqlite3ColumnTextAsync();
     testSqliteMemoryFunctionsAsync();
 
-    // TODO: Add more tests. Use existing SQLite tests?
+    Initialization_UT();
+    Execution_UT();
+    Prepared_UT();
+    DataExchange_UT();
+    Transaction_UT();
+    ErrorHandling_UT();
+    Memory_UT();
+    Advanced_UT();
+    Stress_UT();
+    Future_UT();
 
-    std::cout << "All tests passed!" << std::endl;
+    std::cout << "========================================" << std::endl;
+    std::cout << "   ALL TESTS PASSED SUCCESSFULLY        " << std::endl;
+    std::cout << "========================================" << std::endl;
     return 0;
 }

@@ -1,7 +1,14 @@
-// Asynchronous SQLite wrapper using a C++ delegate library. 
+// Asynchronous SQLite wrapper example application.
 // @see https://github.com/endurodave/Async-SQLite
-// @see https://github.com/endurodave/AsyncMulticastDelegateModern
-// David Lafreniere, Nov 2024.
+// @see https://github.com/endurodave/DelegateMQ
+// David Lafreniere, 2026.
+
+// This application demonstrates various usage patterns for the Async-SQLite wrapper:
+// 1. Simple Asynchronous Execution: Basic fire-and-forget SQL commands.
+// 2. Internal Thread Scheduling: Manually creating delegates to run on the SQLite thread.
+// 3. Multithreaded Blocking: Simulating synchronous load from multiple worker threads.
+// 4. Multithreaded Non-Blocking: High-concurrency load using callbacks.
+// 5. Future/Async API: Using std::future to interleave main thread work with database operations.
 
 #include "DelegateMQ.h"
 #include <stdio.h>
@@ -325,6 +332,56 @@ std::chrono::microseconds example4()
     return nonBlockingDuration;
 }
 
+// Example future: Using std::future for concurrent database operations
+// This demonstrates the "Fire-and-Forget" pattern where the main thread
+// remains responsive while a heavy SQL operation runs in the background.
+void example_future()
+{
+    printf_safe("\n--- Starting Example 5 (Future/Async) ---\n");
+
+    sqlite3* db = nullptr;
+    // Open DB synchronously to ensure valid handle
+    async::sqlite3_open("async_future_example.db", &db);
+
+    // Create a table synchronously (we need it before inserting)
+    async::sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS heavy_data (id INT, val TEXT);", nullptr, nullptr, nullptr);
+
+    // 1. Launch a heavy insert operation asynchronously
+    // This returns immediately, giving us a std::future
+    printf_safe("[Main] Launching heavy async insert...\n");
+
+    // Note: The SQL string must remain valid until the future completes. 
+    // Ideally use string literals or manage lifetime carefully.
+    std::string sql = "INSERT INTO heavy_data VALUES (123, 'Concurrent Data');";
+
+    // Pass 5 arguments matching the raw API signature
+    auto future = async::sqlite3_exec_future(db, sql.c_str(), nullptr, nullptr, nullptr);
+
+    // 2. Perform other work on the main thread while DB is busy
+    // In a real app, this would be UI updates or input processing.
+    printf_safe("[Main] DB is busy. Performing other tasks on main thread...\n");
+    for (int i = 0; i < 3; ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        printf_safe("[Main] Working... %d%%\n", (i + 1) * 33);
+    }
+
+    // 3. Wait for the database operation to complete and check the result
+    printf_safe("[Main] Waiting for DB to finish...\n");
+
+    // .get() blocks here ONLY if the DB task is still running.
+    int rc = future.get();
+
+    if (rc == SQLITE_OK) {
+        printf_safe("[Main] Async insert completed successfully!\n");
+    }
+    else {
+        printf_safe("[Main] Async insert failed with code: %d\n", rc);
+    }
+
+    async::sqlite3_close(db);
+    std::remove("async_future_example.db");
+}
+
 //------------------------------------------------------------------------------
 // main
 //------------------------------------------------------------------------------
@@ -344,14 +401,12 @@ int main(void)
     // Initialize async sqlite3 interface
     async::sqlite3_init_async();
 
-    // Optionally run unit tests
-    RunUnitTests();
-
     // Run all examples
     example1();
     example2();
     auto blockingDuration = example3();
     auto nonBlockingDuration = example4();
+    example_future();
 
     // Wait for example4() to complete on nonBlockingAsyncThread
     while (!completeFlag)
@@ -367,6 +422,9 @@ int main(void)
     // Compare blocking and non-blocking execution times
     std::cout << "Blocking Time: " << blockingDuration.count() << " microseconds." << std::endl;
     std::cout << "Non-Blocking Time: " << nonBlockingDuration.count() << " microseconds." << std::endl;
+
+    // Run unit tests
+    RunUnitTests();
 
     // Ensure the timer thread completes before main exits
     processTimerExit.store(true);

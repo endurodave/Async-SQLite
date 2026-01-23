@@ -12,7 +12,7 @@ An asynchronous SQLite API wrapper implemented using a C++ delegate libraries. A
 - [Asynchronous SQLite API using C++ Delegates](#asynchronous-sqlite-api-using-c-delegates)
 - [Table of Contents](#table-of-contents)
 - [Overview](#overview)
-- [References](#references)
+  - [References](#references)
 - [Getting Started](#getting-started)
 - [Delegate Quick Start](#delegate-quick-start)
 - [Why Asynchronous SQLite](#why-asynchronous-sqlite)
@@ -23,15 +23,30 @@ An asynchronous SQLite API wrapper implemented using a C++ delegate libraries. A
   - [Multithread Example](#multithread-example)
     - [Synchronous Blocking Execution](#synchronous-blocking-execution)
     - [Asynchronous Non-Blocking Execution](#asynchronous-non-blocking-execution)
-    - [Test Results](#test-results)
+  - [Future Example](#future-example)
+  - [Test Results](#test-results)
 
 # Overview
 
-SQLite is a lightweight, serverless, self-contained SQL database engine commonly used for embedded applications and local data storage. The C++ delegate library is a multi-threaded framework capable of anonymously targeting any callable function, either synchronously or asynchronously. This delegate library is used to create an asynchronous API for SQLite. SQLite operates in a private thread of control, with all client API calls being invoked asynchronously on this private thread. The SQLite asynchronous wrapper makes no changes to the SQLite API, except for the addition of a trailing timeout argument for wait duration.
+SQLite is a lightweight, serverless, self-contained SQL database engine commonly used for embedded applications and local data storage. The C++ DelegateMQ library is a multi-threaded framework capable of anonymously targeting any callable function, either synchronously or asynchronously.
 
-The purpose of the wrapper is twofold: First, to provide a simple asynchronous layer over SQLite, and second, to serve as a working example of an asynchronous delegate library or subsystem interface.
+This project leverages the delegate library to create a robust, thread-safe asynchronous wrapper for SQLite. All database operations are marshaled to a dedicated private worker thread, ensuring strict serialization of database access while freeing the client thread from blocking operations.
 
-# References
+**Key Features**
+
+1. **Thread Safety:** A single background thread manages all SQLite interactions, preventing race conditions without complex client-side locking.
+
+2. **Synchronous API (Blocking):** Wrappers that mimic the standard SQLite API but execute on the worker thread. The calling thread blocks until completion or a specified timeout occurs.
+
+    * *Usage:* Ideal for linear logic where the result is needed immediately.
+    * *Signature:* `sqlite3_exec(..., dmq::Duration timeout)`
+
+3. **Future API (Non-Blocking):** "Fire-and-Forget" functions that return a `std::future<int>` immediately. The main thread can continue processing UI updates or other tasks while the heavy SQL operation runs in the background.
+
+   * *Usage:* Ideal for high-performance applications, UI responsiveness, and concurrent task processing.
+   * *Signature:* `std::future<int> sqlite3_exec_future(...)`
+
+## References
 
 * <a href="https://github.com/endurodave/DelegateMQ">DelegatesMQ</a> - Invoke any C++ callable function synchronously, asynchronously, or on a remote endpoint.
 * <a href="https://www.sqlite.org/">SQLite</a> - SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
@@ -82,16 +97,21 @@ int main(void)
 
 # Why Asynchronous SQLite
 
-* **Improved Performance:** Offloading SQLite operations to a separate thread allows the main thread to remain responsive, enhancing overall application performance.
-* **Non-blocking Operations:** By executing database queries in a separate thread, the main application thread can continue processing other tasks without waiting for SQLite operations to complete. A callback can be used to signal completion.
-* **Atomic Operations:** Execute a series of database operations that cannot be interrupted without locks.
-* **Isolation:** Running SQLite on a private thread ensures that database-related tasks are isolated from the main application logic, reducing the risk of thread contention or deadlock in the main application.
+* **Thread Safety by Design:** SQLite handles are accessed exclusively by a single private worker thread. This serialization eliminates race conditions and removes the need for complex mutex locking code in your main application.
 
-A side benefit is a real-world example of a multi-threaded application using the delegate library. 
+* **Responsive UI (Non-Blocking):** Using the Future API, expensive database operations (like bulk inserts or complex joins) are offloaded to the background. The main thread receives a `std::future` immediately, allowing it to keep the UI smooth and responsive while waiting for the result.
+
+* **Flexible Control Flow:** The wrapper provides two distinct ways to interact with the database:
+
+  * **Synchronous:** Block and wait for a result (simple, linear logic for standard tasks).
+
+  * **Asynchronous:** "Fire-and-forget" using futures (high-concurrency for heavy tasks).
+
+* **Sequential Atomicity:** Requests sent to the worker thread are executed in the exact order they are received. This allows you to safely dispatch a chain of dependent commands (e.g., `BEGIN`, multiple `INSERT`s, `COMMIT`) knowing they will run uninterrupted.
 
 # Asynchronous SQLite
 
-The file `async_sqlite3.h` implement the asynchronous interface. Each async function matches the SQLite library except the addition of a `timeout` argument.
+The file `async_sqlite3.h` defines the asynchronous interface. Each async function matches the SQLite library except the addition of a `timeout` argument.
 
 ```cpp
 namespace async
@@ -108,7 +128,7 @@ namespace async
     SQLITE_API int sqlite3_open(
         const char* filename,   /* Database filename (UTF-8) */
         sqlite3** ppDb,         /* OUT: SQLite db handle */
-        std::chrono::milliseconds timeout = MAX_WAIT
+        dmq::Duration timeout = MAX_WAIT
     );
 
     SQLITE_API int sqlite3_exec(
@@ -117,12 +137,12 @@ namespace async
         sqlite3_callback xCallback, /* Invoke this callback routine */
         void* pArg,                 /* First argument to xCallback() */
         char** pzErrMsg,            /* Write error messages here */
-        std::chrono::milliseconds timeout = MAX_WAIT
+        dmq::Duration timeout = MAX_WAIT
     );
 
     SQLITE_API int sqlite3_close(
         sqlite3* db,
-        std::chrono::milliseconds timeout = MAX_WAIT
+        dmq::Duration timeout = MAX_WAIT
     );
 
     // etc...
@@ -146,12 +166,11 @@ Thread* async::sqlite3_get_thread(void)
 SQLITE_API int async::sqlite3_open(
     const char* filename,   /* Database filename (UTF-8) */
     sqlite3** ppDb,         /* OUT: SQLite db handle */
-    std::chrono::milliseconds timeout
+    dmq::Duration timeout
 )
 {
     // Asynchronously invoke ::sqlite3_open on the SQLiteThread thread
-    auto retVal = AsyncInvoke(::sqlite3_open, timeout, filename, ppDb);
-    return retVal;
+    return AsyncInvoke(::sqlite3_open, timeout, filename, ppDb);
 }
 
 SQLITE_API int async::sqlite3_exec(
@@ -160,82 +179,21 @@ SQLITE_API int async::sqlite3_exec(
     sqlite3_callback xCallback, /* Invoke this callback routine */
     void* pArg,                 /* First argument to xCallback() */
     char** pzErrMsg,            /* Write error messages here */
-    std::chrono::milliseconds timeout
+    dmq::Duration timeout
 )
 {
-    auto retVal = AsyncInvoke(::sqlite3_exec, timeout, db, zSql, xCallback, pArg, pzErrMsg);
-    return retVal;
+    return AsyncInvoke(::sqlite3_exec, timeout, db, zSql, xCallback, pArg, pzErrMsg);
 }
 
 SQLITE_API int async::sqlite3_close(
     sqlite3* db,
-    std::chrono::milliseconds timeout
+    dmq::Duration timeout
 )
 {
-    auto retVal = AsyncInvoke(::sqlite3_close, timeout, db);
-    return retVal;
+    return AsyncInvoke(::sqlite3_close, timeout, db);
 }
 
 // etc...
-```
-
-The `AsyncInvoke()` helper function invokes the function asynchronously if the caller is not executing on the `SQLiteThread` thread. Otherwise, if the caller is already on the internal thread the target function is called synchronously.
-
-```cpp
-// A private worker thread instance to execute all SQLite API functions
-static Thread SQLiteThread("SQLite Thread");
-
-/// Helper function to simplify asynchronous function calling on SQLiteThread
-/// @param[in] func - a function to invoke
-/// @param[in] timeout - the time to wait for invoke to complete
-/// @param[in] args - the function argument(s) passed to func
-template <typename Func, typename Timeout, typename... Args>
-auto AsyncInvoke(Func func, Timeout timeout, Args&&... args)
-{
-    // Deduce return type of func
-    using RetType = decltype(func(std::forward<Args>(args)...));
-
-    // Is the calling function executing on the SQLiteThread thread?
-    if (SQLiteThread.GetThreadId() != Thread::GetCurrentThreadId())
-    {
-        // Create a delegate that points to func and is invoked on SQLiteThread
-        auto delegate = MakeDelegate(func, SQLiteThread, timeout);
-
-        // Invoke the delegate target function asynchronously and wait for function call to complete
-        auto retVal = delegate.AsyncInvoke(std::forward<Args>(args)...);
-
-        if constexpr (std::is_void<RetType>::value == false)
-        {
-            // Did async function call succeed?
-            if (retVal.has_value())
-            {
-                // Return the return value to caller
-                return std::any_cast<RetType>(retVal.value());
-            }
-            else
-            {
-                if constexpr (std::is_same_v<RetType, int>)
-                    return SQLITE_ERROR;  // Special case for int
-                else
-                    return RetType();
-            }
-        }
-    }
-    else
-    {
-        // Invoke target function synchronously since we're already executing on SQLiteThread
-        if constexpr (std::is_void_v<RetType>)
-        {
-            func(std::forward<Args>(args)...); // Synchronous call
-            return RetType(); // No return value for void
-        }
-        else
-        {
-            auto retVal = func(std::forward<Args>(args)...);  // Return the result for non-void types
-            return std::any_cast<RetType>(retVal);
-        }
-    }
-}
 ```
 
 # Examples
@@ -264,6 +222,7 @@ int main(void)
     example2();
     auto blockingDuration = example3();
     auto nonBlockingDuration = example4();
+    example_future();
 
     // Wait for example4() to complete on nonBlockingAsyncThread
     while (!completeFlag)
@@ -567,7 +526,60 @@ std::chrono::microseconds example4()
 }
 ```
 
-### Test Results
+## Future Example
+
+This example illustrates how to utilize `std::future` for concurrent database operations. By leveraging the asynchronous API, you can implement a "Fire-and-Forget" pattern where the main thread remains fully responsive—performing UI updates or other processing—while heavy SQL operations execute in the background.
+
+```cpp
+void example_future()
+{
+    printf_safe("\n--- Starting Example 5 (Future/Async) ---\n");
+
+    sqlite3* db = nullptr;
+    // Open DB synchronously to ensure valid handle
+    async::sqlite3_open("async_future_example.db", &db);
+
+    // Create a table synchronously (we need it before inserting)
+    async::sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS heavy_data (id INT, val TEXT);", nullptr, nullptr, nullptr);
+
+    // 1. Launch a heavy insert operation asynchronously
+    // This returns immediately, giving us a std::future
+    printf_safe("[Main] Launching heavy async insert...\n");
+
+    // Note: The SQL string must remain valid until the future completes. 
+    // Ideally use string literals or manage lifetime carefully.
+    std::string sql = "INSERT INTO heavy_data VALUES (123, 'Concurrent Data');";
+
+    // Pass 5 arguments matching the raw API signature
+    auto future = async::sqlite3_exec_future(db, sql.c_str(), nullptr, nullptr, nullptr);
+
+    // 2. Perform other work on the main thread while DB is busy
+    // In a real app, this would be UI updates or input processing.
+    printf_safe("[Main] DB is busy. Performing other tasks on main thread...\n");
+    for (int i = 0; i < 3; ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        printf_safe("[Main] Working... %d%%\n", (i + 1) * 33);
+    }
+
+    // 3. Wait for the database operation to complete and check the result
+    printf_safe("[Main] Waiting for DB to finish...\n");
+
+    // .get() blocks here ONLY if the DB task is still running.
+    int rc = future.get();
+
+    if (rc == SQLITE_OK) {
+        printf_safe("[Main] Async insert completed successfully!\n");
+    }
+    else {
+        printf_safe("[Main] Async insert failed with code: %d\n", rc);
+    }
+
+    async::sqlite3_close(db);
+    std::remove("async_future_example.db");
+}
+```
+
+## Test Results
 
 Use *DB Browser for SQLite* tool to examine the results. Notice the interleaving of data by both worker threads.
 
