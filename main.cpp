@@ -1,4 +1,4 @@
-// Asynchronous SQLite wrapper example application.
+// Asynchronous SQLite API's implemented using C++ delegates
 // @see https://github.com/endurodave/Async-SQLite
 // @see https://github.com/endurodave/DelegateMQ
 // David Lafreniere, 2026.
