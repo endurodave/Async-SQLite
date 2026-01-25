@@ -120,8 +120,8 @@ namespace async
     // -------------------------------------------------------------------------
     // Initialization & Management
     // -------------------------------------------------------------------------
-    SQLITE_API int sqlite3_init_async(void);
-    SQLITE_API int sqlite3_shutdown(dmq::Duration timeout = MAX_WAIT);
+    int sqlite3_init_async(void);
+    int sqlite3_shutdown(dmq::Duration timeout = MAX_WAIT);
 
     // Accessor for the internal worker thread
     Thread* sqlite3_get_thread(void);
@@ -139,8 +139,8 @@ namespace async
     // -------------------------------------------------------------------------
     // Synchronous / Blocking API (Connection & Core)
     // -------------------------------------------------------------------------
-    SQLITE_API int sqlite3_open(const char* filename, sqlite3** ppDb, dmq::Duration timeout = MAX_WAIT);
-    SQLITE_API int sqlite3_open16(const void* filename, sqlite3** ppDb, dmq::Duration timeout = MAX_WAIT);
+    int sqlite3_open(const char* filename, sqlite3** ppDb, dmq::Duration timeout = MAX_WAIT);
+    int sqlite3_open16(const void* filename, sqlite3** ppDb, dmq::Duration timeout = MAX_WAIT);
 
     // etc...
 }
@@ -149,15 +149,15 @@ namespace async
 The file `async_sqlite3.cpp` implements each function. 
 
 ```cpp
-SQLITE_API void sqlite3_progress_handler(sqlite3* db, int nOps, int(*xProgress)(void*), void* pArg, dmq::Duration timeout) {
+void sqlite3_progress_handler(sqlite3* db, int nOps, int(*xProgress)(void*), void* pArg, dmq::Duration timeout) {
     AsyncInvoke(::sqlite3_progress_handler, timeout, db, nOps, xProgress, pArg);
 }
 
-SQLITE_API int sqlite3_open(const char* filename, sqlite3** ppDb, dmq::Duration timeout) {
+int sqlite3_open(const char* filename, sqlite3** ppDb, dmq::Duration timeout) {
     return AsyncInvoke(::sqlite3_open, timeout, filename, ppDb);
 }
 
-SQLITE_API int sqlite3_open16(const void* filename, sqlite3** ppDb, dmq::Duration timeout) {
+int sqlite3_open16(const void* filename, sqlite3** ppDb, dmq::Duration timeout) {
     return AsyncInvoke(::sqlite3_open16, timeout, filename, ppDb);
 }
 
