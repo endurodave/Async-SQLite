@@ -77,7 +77,7 @@ The DelegateMQ contains delegates and delegate containers. The example below cre
 ```cpp
 #include "DelegateMQ.h"
 
-using namespace DelegateMQ;
+using namespace dmq;
 
 void MyTestFunc(int val)
 {
