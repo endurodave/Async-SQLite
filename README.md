@@ -1,7 +1,7 @@
 ![License MIT](https://img.shields.io/github/license/BehaviorTree/BehaviorTree.CPP?color=blue)
-[![conan Ubuntu](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_ubuntu.yml/badge.svg)](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_ubuntu.yml)
-[![conan Ubuntu](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_clang.yml/badge.svg)](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_clang.yml)
-[![conan Windows](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_windows.yml/badge.svg)](https://github.com/endurodave/Async-SQLite/actions/workflows/cmake_windows.yml)
+[![conan Ubuntu](https://github.com/DelegateMQ/Async-SQLite/actions/workflows/cmake_ubuntu.yml/badge.svg)](https://github.com/DelegateMQ/Async-SQLite/actions/workflows/cmake_ubuntu.yml)
+[![conan Ubuntu](https://github.com/DelegateMQ/Async-SQLite/actions/workflows/cmake_clang.yml/badge.svg)](https://github.com/DelegateMQ/Async-SQLite/actions/workflows/cmake_clang.yml)
+[![conan Windows](https://github.com/DelegateMQ/Async-SQLite/actions/workflows/cmake_windows.yml/badge.svg)](https://github.com/DelegateMQ/Async-SQLite/actions/workflows/cmake_windows.yml)
 
 # Asynchronous SQLite API using C++ Delegates
 
@@ -59,7 +59,7 @@ By implementing the Serialized Command Processor pattern, this library solves SQ
 
 ## References
 
-* <a href="https://github.com/endurodave/DelegateMQ">DelegatesMQ</a> - Invoke any C++ callable function synchronously, asynchronously, or on a remote endpoint.
+* <a href="https://github.com/DelegateMQ/DelegateMQ">DelegatesMQ</a> - Invoke any C++ callable function synchronously, asynchronously, or on a remote endpoint.
 * <a href="https://www.sqlite.org/">SQLite</a> - SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
 
 # Getting Started
@@ -72,7 +72,7 @@ By implementing the Serialized Command Processor pattern, this library solves SQ
 
 # Delegate Quick Start
 
-The DelegateMQ contains delegates and delegate containers. The example below creates a delegate with the target function `MyTestFunc()`. The first example is a synchronously delegate function call, and the second example asynchronously. Notice the only difference is adding a thread instance `myThread` argument. See [DelegateMQ](https://github.com/endurodave/DelegateMQ) repository for more details.
+The DelegateMQ contains delegates and delegate containers. The example below creates a delegate with the target function `MyTestFunc()`. The first example is a synchronously delegate function call, and the second example asynchronously. Notice the only difference is adding a thread instance `myThread` argument. See [DelegateMQ](https://github.com/DelegateMQ/DelegateMQ) repository for more details.
 
 ```cpp
 #include "DelegateMQ.h"
