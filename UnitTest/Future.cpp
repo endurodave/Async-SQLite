@@ -43,7 +43,7 @@ static void Test_Future_Exec()
 
     // --- DEBUG CHECK ---
     // If ID is 0, the thread isn't running and promises will be broken.
-    Thread* pThread = async::sqlite3_get_thread();
+    dmq::os::Thread* pThread = async::sqlite3_get_thread();
     if (pThread) {
         std::cout << "[Exec] Worker Thread ID: " << pThread->GetThreadId() << std::endl;
     }

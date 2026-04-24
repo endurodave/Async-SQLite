@@ -22,12 +22,12 @@ using namespace std;
 using namespace dmq;
 
 // Worker thread instances
-Thread workerThreads[] = {
+dmq::os::Thread workerThreads[] = {
     { "WorkerThread1" },
     { "WorkerThread2" } 
 };
 
-Thread nonBlockingAsyncThread("NonBlockingAsyncThread");
+dmq::os::Thread nonBlockingAsyncThread("NonBlockingAsyncThread");
 
 static const int WORKER_THREAD_CNT = sizeof(workerThreads) / sizeof(workerThreads[0]);
 
@@ -45,7 +45,7 @@ static void ProcessTimers()
     while (!processTimerExit.load())
     {
         // Process all delegate-based timers
-        Timer::ProcessTimers();
+        dmq::util::Timer::ProcessTimers();
         std::this_thread::sleep_for(std::chrono::microseconds(50));
     }
 }
@@ -273,7 +273,7 @@ void example1()
 void example2()
 {
     // Get the internal SQLite async interface thread
-    Thread* sqlThread = async::sqlite3_get_thread();
+    dmq::os::Thread* sqlThread = async::sqlite3_get_thread();
 
     // Create an asynchronous blocking delegate to invoke async_sqlite_simple_example()
     auto delegate = MakeDelegate(&async_sqlite_simple_example, *sqlThread, async::MAX_WAIT);

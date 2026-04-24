@@ -49,7 +49,7 @@ namespace async
     int sqlite3_shutdown(dmq::Duration timeout = MAX_WAIT);
 
     // Accessor for the internal worker thread
-    Thread* sqlite3_get_thread(void);
+    dmq::os::Thread* sqlite3_get_thread(void);
 
     // -------------------------------------------------------------------------
     // Future / Async API (Non-Blocking)

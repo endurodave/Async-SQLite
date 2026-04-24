@@ -16,7 +16,7 @@ using namespace dmq;
 namespace async
 {
     // A private worker thread instance to execute all SQLite API functions
-    static Thread SQLiteThread("SQLite Thread");
+    static dmq::os::Thread SQLiteThread("SQLite Thread");
 
     // --------------------------------------------------------------------------------
     // Internal Helper: AsyncInvokeFuture
@@ -102,7 +102,7 @@ namespace async
     // API Implementation
     // --------------------------------------------------------------------------------
 
-    Thread* sqlite3_get_thread(void) {
+    dmq::os::Thread* sqlite3_get_thread(void) {
         return &SQLiteThread;
     }
 

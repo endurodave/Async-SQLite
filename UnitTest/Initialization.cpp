@@ -23,7 +23,7 @@ static void Test_InitAndThread()
     sqlite3_init_async();
 
     // Verify thread is created
-    Thread* thread = sqlite3_get_thread();
+    dmq::os::Thread* thread = sqlite3_get_thread();
     ASSERT_TRUE(thread != nullptr);
 
     // Verify thread has a name (optional, but good sanity check)
