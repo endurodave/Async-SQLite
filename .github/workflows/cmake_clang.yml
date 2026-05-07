@@ -24,3 +24,4 @@ jobs:
 
     - name: Run Async-SQLiteApp
       run: ./build/Async-SQLiteApp  # Run the built executable
+
